@@ -1,10 +1,10 @@
 import Primes (abundantsTo)
-import Data.IntMap qualified as Map
+import Data.Array
 
-solution = sum . Map.keys . Map.difference emptyMap $ sumMap
-  where
-    as = abundantsTo 28123
-    emptyMap = Map.fromDistinctAscList (map (,()) [1..28128])
-    sumMap = Map.fromList [(a+b,())|a <- as,  b <- takeWhile(<=28128-a) as]
+solution = 
+  let empties = array (1,28123) [(i,0)|i<-[1..28123]]
+      as = abundantsTo 28123
+      updated = empties // [(i+j,1)|i<-as, j<-takeWhile (<=28123-i) as]
+  in sum [i|(i, check)<-assocs updated, check == 0]
 
 main = print solution
