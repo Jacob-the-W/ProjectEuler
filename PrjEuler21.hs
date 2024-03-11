@@ -1,8 +1,19 @@
 import Data.List
+import Primes (sumPropDivisors)
 
-main = print (pairsBelow 10000)
 
-propDivisors n = (1:) $ nub $ concat [ [x, div n x] | x <- [2..limit], rem n x == 0 ]
-     where limit = (floor.sqrt.fromIntegral) n
-d n = sum ( propDivisors n )
-pairsBelow n = [(i,d i)| i<-[1..n-1], i /= d i, i == d (d i), i < d i]
+d = sumPropDivisors
+pairsBelow n = [[i,d i]| i<-[1..n-1],d i < n, i < d i, i == d (d i)]
+solution = sum $ concat $ pairsBelow 10000
+
+--lets try constructing the abundant numbers first, then feed that into i instead of [1..n-1].
+
+isAbundant n = d n > n
+
+abundants = filter isAbundant [1..]
+pairsBelow' n = [[i,d i]| i<-takeWhile (<n) abundants,d i < n, i == d (d i)]
+
+
+main = do
+  print solution
+  print $ pairsBelow' $ 10000
