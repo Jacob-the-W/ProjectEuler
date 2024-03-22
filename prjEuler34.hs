@@ -2,15 +2,13 @@
 
 import Data.Char
 
-readDigits = map (map digitToInt . show)
+readDigits n = digitToInt <$> show n
 
 nums = [3..2450160]
-solutions = [n|n<-nums,[n]==sumOfFactorialOfDigits n]
+solutions = [n|n<-nums,n==sumOfFactorialOfDigits n]
 
-sumOfFactorialOfDigits n = map (sum . map factorial) $ readDigits [n]
+sumOfFactorialOfDigits n = sum . map factorial $ readDigits n
 
-factorial 0 = 1
-factorial 1 = 1
 factorial n = product [1..n]
 
 main::IO()
