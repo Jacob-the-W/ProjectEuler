@@ -151,7 +151,7 @@ primes :: Integral a => [a]
 primes = 2 : filter isPrime [3,5..] where
   isPrime n =
     let r = floor . sqrt . fromIntegral $ n
-    in (n >= 2) && all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes)
+    in all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes)
 
 -- |
 -- primes' is just like primes, but uses Int, and a base 210 wheel instead of sieving on odds. Much faster, great if you know all inputs are bounded by @maxBound :: Int@.
@@ -166,7 +166,9 @@ primes = 2 : filter isPrime [3,5..] where
 -- @
 primes' :: [Int]
 primes' = 2 : filter isPrime wheel where
-  isPrime n = let r = floor . sqrt . fromIntegral $ n in all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes')
+  isPrime n = 
+    let r = floor . sqrt . fromIntegral $ n 
+    in all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes')
   wheel  = 3:5:7: drop 1 ( scanl' (+) 1 (cycle wheel'))
   wheel' = [10,2,4,2,4,6,2,6,4,2,4,6,6,2,6,4,2,6,4,6,8,4,2,4,
            2,4,8,6,4,6,2,4,6,2,6,6,4,2,4,6,2,6,4,2,4,2,10,2]
