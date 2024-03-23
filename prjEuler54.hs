@@ -1,14 +1,13 @@
 module Main where
 import Data.List ( group, nub, sort, sortBy )
 import Data.Ord ( Down(Down), comparing )
+import Data.Char
+import Data.Map qualified as Map
 
 data Suit = Clubs | Diamonds | Hearts | Spades deriving (Eq, Enum)
 
 instance Show Suit where
-    show Clubs = "C"
-    show Diamonds = "D"
-    show Hearts = "H"
-    show Spades = "S"
+    show s = ["CDHS" !! fromEnum s]
 
 data Rank = Two | Three | Four | Five | Six | Seven | Eight | Nine |
             Ten | Jack | Queen | King | Ace
@@ -16,20 +15,8 @@ data Rank = Two | Three | Four | Five | Six | Seven | Eight | Nine |
 
 instance Show Rank where
   show :: Rank -> String
-  show r = case r of
-    Two -> "2"
-    Three -> "3"
-    Four -> "4"
-    Five -> "5"
-    Six -> "6"
-    Seven -> "7"
-    Eight -> "8"
-    Nine -> "9"
-    Ten -> "T"
-    Jack -> "J"
-    Queen -> "Q"
-    King -> "K"
-    Ace -> "A"
+  show r =   [(['2'..'9'] ++ "TJQKA") !! fromEnum r]
+
 
 data Card = Card { rank :: Rank, suit :: Suit } deriving (Eq)
 
@@ -49,87 +36,57 @@ data HandRank = HighCard Hand | OnePair Rank | TwoPairs Rank Rank |
   FourOfAKind Rank | StraightFlush Rank | RoyalFlush deriving (Eq, Ord)
 
 instance Show HandRank where
-    show (HighCard hand)         = "High Card:       "
-    show (OnePair rank)          = "One Pair:        "
-    show (TwoPairs rank1 rank2)  = "Two Pairs:       "
-    show (ThreeOfAKind rank)     = "Three of a Kind: "
-    show (Straight rank)         = "Straight:        "
-    show (Flush rank)            = "Flush:           "
-    show (FullHouse rank1 rank2) = "Full House:      "
-    show (FourOfAKind rank)      = "Four of a Kind:  "
-    show (StraightFlush rank)    = "Straight Flush:  "
-    show RoyalFlush              = "Royal Flush:     "
+ show hr = case hr of
+  HighCard hand         -> "High Card:       "
+  OnePair rank          -> "One Pair:        "
+  TwoPairs rank1 rank2  -> "Two Pairs:       "
+  ThreeOfAKind rank     -> "Three of a Kind: "
+  Straight rank         -> "Straight:        "
+  Flush rank            -> "Flush:           "
+  FullHouse rank1 rank2 -> "Full House:      "
+  FourOfAKind rank      -> "Four of a Kind:  "
+  StraightFlush rank    -> "Straight Flush:  "
+  RoyalFlush            -> "Royal Flush:     "
 
 readCard :: String -> Card
 readCard [r,s] = Card { rank = readRank r, suit = readSuit s }
   where
-    readRank '2' = Two
-    readRank '3' = Three
-    readRank '4' = Four
-    readRank '5' = Five
-    readRank '6' = Six
-    readRank '7' = Seven
-    readRank '8' = Eight
-    readRank '9' = Nine
-    readRank 'T' = Ten
-    readRank 'J' = Jack
-    readRank 'Q' = Queen
-    readRank 'K' = King
-    readRank 'A' = Ace
-    readSuit 'C' = Clubs
-    readSuit 'D' = Diamonds
-    readSuit 'H' = Hearts
-    readSuit 'S' = Spades
+    readRank r = case r of
+      '2' -> Two;   '3' -> Three
+      '4' -> Four;  '5' -> Five
+      '6' -> Six;   '7' -> Seven
+      '8' -> Eight; '9' -> Nine
+      'T' -> Ten;   'J' -> Jack;
+      'Q' -> Queen; 'K' -> King; 'A' -> Ace
+    readSuit s = case s of
+      'C' -> Clubs
+      'D' -> Diamonds
+      'H' -> Hearts
+      'S' -> Spades
 
-isFlush :: Hand -> Bool
-isFlush = (==1) . length . nub . map suit
-
-isStraight :: Hand -> Bool
-isStraight hand =
-  let hand' = reverse . map (fromEnum . rank) $ hand
-  in all (==1) (zipWith (-) (tail hand') hand')
-
-isStraightFlush :: Hand -> Bool
-isStraightFlush hand = and ([isStraight, isFlush] <*> [hand])
-
-isRoyalFlush :: Hand -> Bool
-isRoyalFlush hand = isStraightFlush hand && (Ace == rank (head hand))
-
-sizeOfGroups :: Hand -> [Int]
-sizeOfGroups = sort . map length . group . map rank
-
-isFourOfAKind :: Hand -> Bool
-isFourOfAKind hand = [1,4] == sizeOfGroups hand
-
-isFullHouse :: Hand -> Bool
-isFullHouse hand = [2,3] == sizeOfGroups hand
-
-isThreeOfAKind hand = [1,1,3] == sizeOfGroups hand
-
-isTwoPair hand = [1,2,2] == sizeOfGroups hand
-
-isOnePair hand = [1,1,1,2] == sizeOfGroups hand
+groups :: Hand -> [(Int, Rank)]
+groups = sort . map (\(g:gs) -> (length (g:gs), g)) . group . map rank
 
 handRank :: Hand -> HandRank
 handRank hand
-  | isRoyalFlush hand    = RoyalFlush
-  | isStraightFlush hand = StraightFlush (rank . head $ hand)
-  | isFourOfAKind hand   =
-      FourOfAKind (head . map head . filter ((==4) . length) . group . map rank $ hand)
-  | isFullHouse hand     =
-    let go = sortBy (comparing length) . group . map rank $ hand
-    in FullHouse (head . last $ go) (head . head $ go)
-  | isFlush hand         = Flush (rank . head $ hand)
-  | isStraight hand      = Straight (rank . head $ hand)
-  | isThreeOfAKind hand  =
-      ThreeOfAKind (head . map head . filter ((==3) . length) . group . map rank $ hand)
-  | isTwoPair hand       =
-      let go = concat . filter ((==2) . length) . group . map rank $ hand
-      in TwoPairs (head go) (last go)
-  | isOnePair hand       =
-      let go = head . head . filter ((==2) . length) . group . map rank $ hand
-      in  OnePair go
-  | otherwise = HighCard hand
+  | isRoyalFlush       = RoyalFlush
+  | isStraightFlush    = StraightFlush lead
+  | [1,4] == sizes     = FourOfAKind ( gs !! 1)
+  | [2,3] == sizes     = FullHouse (gs !! 1) (head gs)
+  | isFlush            = Flush lead
+  | isStraight         = Straight lead
+  | [1,1,3] == sizes   = ThreeOfAKind (gs !! 2)
+  | [1,2,2] == sizes   = TwoPairs (gs !! 2) (gs !! 1)
+  | [1,1,1,2] == sizes = OnePair (gs !! 3)
+  | otherwise          = HighCard hand where
+   lead = rank . head $ hand
+   (sizes, gs) = unzip . groups $ hand -- 
+   isRoyalFlush = isStraightFlush && (Ace == rank (head hand))
+   isStraightFlush = isStraight && isFlush
+   isStraight =
+     let hand' = map (fromEnum . rank) hand
+     in all (==1) (zipWith (-) hand' (tail hand'))
+   isFlush = (==1) . length . nub . map suit $ hand
 
 winner :: Hand -> Hand -> Int
 winner hand1 hand2
@@ -149,15 +106,18 @@ makeHands :: ([Card], [Card]) -> (Hand, Hand)
 makeHands (a,b) = (makeHand a, makeHand b)
 
 
+winnerString :: Hand -> Hand -> String
 winnerString hand1 hand2 =
     concat [show (handRank hand1), show hand1, " | ",
             show (handRank hand2), show hand2,
             " -> Player ", show $ winner hand1 hand2, " wins."]
 
+solution :: [(Hand, Hand)] -> Int
+solution = length . filter ((==1) . uncurry winner)
+
 main::IO()
 main = do
     inputGames <- readFile "p054_poker.txt"
     let games = map (makeHands . splitAt 5 . map readCard . words) (lines inputGames)
-    mapM_ (putStrLn . uncurry winnerString) games
-    let solution = length . filter ((==1) . uncurry winner) $ games
-    print solution
+    mapM_ (putStrLn . uncurry winnerString) (take 10 games)
+    print . solution $ games
