@@ -10,33 +10,46 @@ Find the sum of the only eleven primes that are both truncatable from left to ri
 NOTE: 2, 3, 5, and 7 are not considered to be truncatable primes.
 --}
 
-import Primes (primes' ,isPrime)
+import Primes (primes')
 
--- cant start or end with 1,4,6,8,9. cant end with 2 or 5. 23 -> 2 or 3 works, smallest example.
---Can't use 0 in the middle 302 -> 30 on right truncation for example
+isPrime :: Int -> Bool
+isPrime n =
+  let r = floor . sqrt . fromIntegral $ n
+  in all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes')
 
-filter1 :: [Int]
-filter1 = filter (\x -> head (show x) `notElem` "14689") primes'
-filter2 :: [Int]
-filter2 = filter (\x -> last (show x) `notElem` "1245689") filter1
-filter3 :: [Int]
-filter3 = filter (\x -> '0' `notElem` take (length (show x) - 1) (drop 1 (show x))) filter2
+-- cant start or end with 1,4,6,8,9. cant end with 2 or 5. 
+-- 23 -> 2 or 3 works, smallest example.
+-- Can't use 0 in the middle 302 -> 30 on right truncation for example
 
-leftTruncate :: Show a => a -> Int
-leftTruncate n = read (tail (show n))::Int
+test1 :: String -> Bool
+test1 x = head x `notElem` "14689"
+
+test2 :: String -> Bool
+test2 x = last x `notElem` "1245689"
+
+test3 :: String -> Bool
+test3 x = '0' `notElem` take (length x - 1) (drop 1 x)
+
+tests :: Int -> Bool
+tests x =
+  and [test1 s, test2 s, test3 s,
+    isLeftTruncatable x, isRightTruncatable x]
+  where
+  (s, l) = (show x, length s)
+  isLeftTruncatable = all isPrime . take l . iterate leftTruncate
+  isRightTruncatable = all isPrime . take l . iterate rightTruncate
+
+leftTruncate :: Int-> Int
+leftTruncate = read . tail . show
 
 rightTruncate :: Int -> Int
-rightTruncate n = n `div` 10
+rightTruncate = (`div` 10)
 
-isLeftTruncatable :: Int -> Bool
-isLeftTruncatable n = all isPrime (take (length (show n)) (iterate leftTruncate n))
+presolution :: [Int]
+presolution = take 11 $ dropWhile (<23) $ filter tests primes'
 
-isRightTruncatable :: Int -> Bool
-isRightTruncatable n = all isPrime (take (length (show n)) (iterate rightTruncate n))
-
-solution :: [Int]
-solution = take 11 $ filter (>=23) $ filter isLeftTruncatable $ filter isRightTruncatable filter3
-
+solution :: Int
+solution = sum presolution
 main :: IO()
 main = do
-  putStrLn $ show solution++" has sum "++show (sum solution)
+  putStrLn $ show presolution++" has sum "++show solution
