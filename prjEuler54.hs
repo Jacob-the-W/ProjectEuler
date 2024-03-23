@@ -62,7 +62,7 @@ readCard [r,s] = Card { rank = readRank r, suit = readSuit s }
       'S' -> Spades
 
 groups :: Hand -> [(Int, Rank)]
-groups = sort . map (\(g:gs) -> (length (g:gs), g)) . group . map rank
+groups hand = sort $ (\(g:gs) -> (length (g:gs), g)) <$> group (rank <$> hand)
 
 handRank :: Hand -> HandRank
 handRank hand
@@ -81,9 +81,9 @@ handRank hand
    isRoyalFlush = isStraightFlush && (Ace == rank (head hand))
    isStraightFlush = isStraight && isFlush
    isStraight =
-     let hand' = map (fromEnum . rank) hand
+     let hand' = fromEnum . rank <$> hand
      in all (==1) (zipWith (-) hand' (tail hand'))
-   isFlush = (==1) . length . nub . map suit $ hand
+   isFlush = (==1) . length . nub $ suit <$> hand
 
 winner :: Hand -> Hand -> Int
 winner hand1 hand2
@@ -114,6 +114,6 @@ solution = length . filter ((==1) . uncurry winner)
 main::IO()
 main = do
     inputGames <- readFile "p054_poker.txt"
-    let games = map (makeHands . splitAt 5 . map readCard . words) (lines inputGames)
-    mapM_ (putStrLn . uncurry winnerString) (take 10 games)
+    let games = makeHands . splitAt 5 . map readCard . words <$> lines inputGames
+    mapM_ putStrLn $ uncurry winnerString <$> take 10 games
     print . solution $ games
