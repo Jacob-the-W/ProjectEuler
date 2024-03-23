@@ -1,11 +1,13 @@
-import Primes (numOfDistinctPrimeFactors,primes,isPrime)
+import Primes (primePowers')
 
-setup = map (\p -> (p,p+1,p+2,p+3)) [1..]
+setup :: [[Int]]
+setup = [[p,p+1,p+2,p+3] | p <- [1..]]
 
-checking = head $ filter (\(a,b,c,d)->all (\x->numOfDistinctPrimeFactors x==4) [a,b,c,d]) setup
-first (a,b,c,d) = a
+checking :: [Int]
+checking = take 1 =<< filter (all ((4==) . length . primePowers')) setup
 
-solution = first checking
+solution :: Int
+solution = head checking
 main::IO()
 main = do
   print solution
