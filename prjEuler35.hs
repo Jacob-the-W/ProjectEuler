@@ -1,20 +1,25 @@
-primes = 2 : filter (\n -> all (\p -> n `mod` p /= 0) (takeWhile (\p -> p*p <= n) primes)) [3,5..999999]
-primes' = [2,5] ++ filter (all (`elem` "1379") . show) primes
+import Primes (primes')
+
+potentials = [2,5] ++ filter (all (`elem` "1379") . show) (takeWhile (<=10^6) primes')
 -- every prime past 10 must end in a 1, 3, 7, or 9. Cycling any other digit breaks it.
 
+isPrime n =
+    let r = floor . sqrt . fromIntegral $ n
+    in all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes')
 
-myCycle::String->String
-myCycle string = drop 1 string ++ take 1 string
+myCycle n = 
+  let digits = floor $ logBase 10 (fromIntegral n) -- technically digits + 1
+      (q, r) = n `quotRem` (10^digits)
+  in 10*r + q
 
-isPrime n = let divisors =  filter (\p -> (n `mod` p) == 0) $ takeWhile (\p -> p*p <=n) primes
-      in null divisors
-
-isPrimeCycle n = let cycles = filter isPrime . map (\x -> read x::Int) $ take 6 (iterate myCycle (show n))
-                 in length cycles == 6
+isPrimeCycle n = 
+  let steps@(i:is) = take 6 (iterate myCycle n)
+      cycles = i:takeWhile isPrime is
+  in length cycles == 6
 
 
 solution::Int
-solution = length (filter isPrimeCycle primes')
+solution = length (filter isPrimeCycle potentials)
 
 main::IO()
 main = do
