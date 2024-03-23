@@ -1,39 +1,63 @@
--- 585 = 1001001001_2
---Find the sum of all numbers < 10^6 which are palindromic in base 10 and base 2.
-{--
---x
-palindromes 1 = [1..9]
---xx
-palindromes 2 = [11,22,33,44,55,66,77,88,99]
---xyx
-palindromes 3 = map (\x -> read(x)::Integer) $ map (\x -> x ++ (drop 1 $ reverse x)) $ map show [x|x<-[10..99]]
---xyyx
-palindromes 4 = map (\x -> read(x)::Integer) $ map (\x -> x ++ (reverse x)) $ map show [x|x<-[10..99]]
---xyzyx
-palindromes 5 = map (\x -> read(x)::Integer) $ map (\x -> x ++ (drop 1 $ reverse x)) $ map show [x|x<-[100..999]]
---xyzzyx
-palindromes 6 = map (\x -> read(x)::Integer) $ map (\x -> x ++ (reverse x)) $ map show [x|x<-[100..999]]
+import Primes (digitsBase)
+{-- Find the sum of all numbers < 10^6 which are palindromic in base 10 and base 2.
+
+Example: 585 = 1001001001_2
 --}
 
---generalized based on above pattern
-palindromes n =
-  if n `mod` 2 == 1
-  then  map (((\x -> read x::Integer) . (\x -> x ++ drop 1 (reverse x))) . show) [10 ^ ((n + 1) `div` 2 - 1) .. 10 ^ ((n + 1) `div` 2) - 1]
-  else  map (((\x -> read x::Integer) . (\x -> x ++ reverse x)) . show) [10 ^ (n `div` 2 - 1) .. 10 ^ (n `div` 2) - 1]
+{-- Analysis/explanation
+Generate palindromes of a given length by taking numbers with half as many 
+digits, and combining them with their reverse.
 
-palindromesUnderBound = concat [palindromes n|n<-[1..6]]
+We must consider two cases: odd and even length palindromes.
 
-isPalindrome x = show x == reverse (show x)
+-- Odd case
+Call the number of digits n = 2k+1. We must create a generator for the
+first half of the palindrome, and then combine it later.
 
-intToBase k n = read $ (concatMap show . reverse) $ map (`mod` k) $
-    takeWhile (>0) [n `div` k^i|i<-[0..]]::Integer
+Note n `div` 2 = k, which will not cover the middle digit.
 
+Use k+1 digits. Call p = (n+1) `div` 2 = (2k + 2) `div` 2 = k+1
 
-digits n = map (\x->read [x]::Integer) $ show n
-baseKtoInt k knary = sum $ zipWith (*) (map (k ^) [0..]) (reverse $ digits knary)
+10^m has m+1 digits, so 10^(p-1) has p digits, and 10^p - 1 has p digits, and
+that will be the range.
 
-solution = sum $ map (baseKtoInt 2) $ filter isPalindrome $ map (intToBase 2) palindromesUnderBound
+E.g., for 5 digits, we need (5+1) `div` 2 = 3 digits, so the range is [100..999], 
+and our combining function will map xyz -> xyzyx
 
+-- Even case
+If the number of digits n = 2k, then n `div` 2 = k, k digits will suffice.
+
+Let p = n `div` 2 = 2k `div` 2 = k.
+Again, 10^m has m+1 digits, so 10^(p-1) has p digits, and 10^p - 1 has p digits.
+
+E.g., for 4 digits, we need 4 `div` 2 = 2 digits, so the range is [10..99], and
+our combining function will map xy -> xyyx.
+-}
+palindromesLength :: Int -> [Int]
+palindromesLength n
+  | odd n = 
+      let p = (n+1) `div` 2 -- [1,3,5] -> [1,2,3]
+      in oddCombine <$> [10^(p - 1)..10^p - 1] -- [10^(2-1)..10^2-1] -> [10..99] is for 3 digits
+  | otherwise = 
+      let p = n `div` 2 -- [2,4,6] -> [1,2,3]
+      in evenCombine <$> [10^(p - 1)..10^p - 1] -- [10^(2-1)..10^2-1] -> [10..99] is for 4 digits
+ where
+   oddCombine x = 
+     let (s, s') = (show x, drop 1 $ reverse s) -- 123 -> ("123", "21")
+     in read $ s ++ s' -- "123" ++ "21" -> 12321
+   evenCombine x = 
+     let (s, s') = (show x, reverse s) -- 123 -> ("123", "321")
+     in read $ s ++ s' -- "123" ++ "321" -> 123321
+    
+
+palindromes :: [Int]
+palindromes = palindromesLength =<< [1..6]
+
+isPalindrome :: Eq a => [a] -> Bool
+isPalindrome ds = ds == reverse ds
+
+solution :: Int
+solution = sum . filter (isPalindrome . digitsBase 2) $ palindromes
 
 main :: IO()
 main = do
