@@ -1,14 +1,19 @@
-import Data.List
-primes = 2 : filter (\n -> all (\p -> n `mod` p /= 0) (takeWhile (\p -> p*p <= n) primes)) [3,5..999999]
 
-isPrime x = x `elem` takeWhile (<= x) primes
+import Primes (primes')
 
-f n k = sum $ take n $ drop k primes
+isPrime :: Int -> Bool
+isPrime n = 
+  let r = floor . sqrt $ fromIntegral n
+  in all (\p -> n `rem` p /=0) . takeWhile (<=r) $ primes'
+
+f :: Int -> Int -> Int
+f n k = sum . take n . drop k $ primes'
 
 --while playing around noted that length $ takeWhile (<=1000000) $ scanl1 (+) primes was 546, 
 -- so that's an upper bound. just fiddled with k until felt comfortable that increasing our lower bound forces us to shrink the k overall.
 
-result = maximum [(n,k,f n k)|k<-[0..10],n<-[2..546], isPrime (f n k),f n k <=1000000]
+result :: (Int, Int, Int)
+result = maximum [(n,k,c)|k<-[0..10],n<-[2..546], let c = f n k, isPrime c, c <=1000000]
 
 main::IO()
 main = do
