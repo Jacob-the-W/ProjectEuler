@@ -8,6 +8,7 @@ checking = take 1 =<< filter (all ((4==) . length . primePowers')) setup
 
 solution :: Int
 solution = head checking
+
 main::IO()
 main = do
   print solution
