@@ -1,8 +1,6 @@
 module Main where
 import Data.List ( group, nub, sort, sortBy )
 import Data.Ord ( Down(Down), comparing )
-import Data.Char
-import Data.Map qualified as Map
 
 data Suit = Clubs | Diamonds | Hearts | Spades deriving (Eq, Enum)
 
@@ -16,7 +14,6 @@ data Rank = Two | Three | Four | Five | Six | Seven | Eight | Nine |
 instance Show Rank where
   show :: Rank -> String
   show r =   [(['2'..'9'] ++ "TJQKA") !! fromEnum r]
-
 
 data Card = Card { rank :: Rank, suit :: Suit } deriving (Eq)
 
@@ -104,7 +101,6 @@ makeHand = sortBy (comparing Down)
 
 makeHands :: ([Card], [Card]) -> (Hand, Hand)
 makeHands (a,b) = (makeHand a, makeHand b)
-
 
 winnerString :: Hand -> Hand -> String
 winnerString hand1 hand2 =
