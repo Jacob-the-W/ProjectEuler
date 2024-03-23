@@ -1,12 +1,20 @@
-import Primes (primes,isPrime)
-import Data.List
+import Primes (primes')
+import Data.List ( permutations )
 
+isPrime :: Int -> Bool
+isPrime n = 
+    let r = floor . sqrt . fromIntegral $ n 
+    in all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes')
 
-pandigitalNumbers nDigits  = map (\x ->read x::Integer) $ permutations $ take nDigits "123456789"
-pandigitalPrimes nDigits = filter isPrime $ pandigitalNumbers nDigits
+pandigitalNumbers :: Int -> [Int]
+pandigitalNumbers nDigits  = read <$> (permutations . take nDigits $ "123456789")
 
-solution = [pandigitalPrimes nDigits|nDigits<-[1..9]]
+pandigitalPrimes :: Int -> [Int]
+pandigitalPrimes = filter isPrime . pandigitalNumbers
+
+solution :: Int
+solution = maximum $ pandigitalPrimes =<< [1..9]
 
 main :: IO()
 main = do
-  print $ maximum . concat $ solution
+  print solution
