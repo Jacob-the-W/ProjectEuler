@@ -1,20 +1,22 @@
--- Digit cancelling fractions like 49/98 = 4/8 even thugh crossing 9s isnt valid.
+-- Digit cancelling fractions like 49/98 = 4/8 even though crossing 9s isnt valid.
 
--- Very inelegant or statement to break it into cases, probably a better way to check each pair
+import Data.List ( (\\) )
 
-digits d1 d2 = read (show d1 ++ show d2)::Int
+isCancellable :: (Int, Int) -> Bool
+isCancellable (a,b) =
+  let (a', b') = (show a \\ show b, show b \\ show a)
+      (c, d) = (read a', read b')
+  in  not (null a') && (d /= 0) && (a*d == b*c) && b /= d && a `mod` 10 /= 0
 
+cancellables :: [(Int, Int)]
+cancellables = filter isCancellable [(a,b) | a <- [10..99], b <- [a+1..99]]
 
-solutions :: Int
-solutions = (\[a,b]->let g = gcd a b in b `div` g) . 
-  (\(p,q)->map product [p,q]) . unzip $ 
-  map ((\(a,b) -> (a `div` gcd a b, b `div` gcd a b)) . 
-  (\(d1,d2,d3,d4) -> (digits d1 d2, digits d3 d4))) 
-    ([(d1,d2,d3,d4) | d1<-[1..9], d2<-[0..9], d3<-[1..9], d4<-[0..9], d2*d4/=0,
-    (d1 == d4 && fromIntegral d2 / fromIntegral d3 == fromIntegral (digits d1 d2) / fromIntegral (digits d3 d4)) ||
-    (d1 == d3 && fromIntegral d2 / fromIntegral d4 == fromIntegral (digits d1 d2) / fromIntegral (digits d3 d4))
-    || (d2 == d4 && fromIntegral d1/ fromIntegral d3 == fromIntegral (digits d1 d2)/fromIntegral (digits d3 d4))
-    || (d2 == d3 && fromIntegral d1 / fromIntegral d4 == fromIntegral (digits d1 d2)/fromIntegral (digits d3 d4)),
-    digits d1 d2 < digits d3 d4])
+solution :: Int  
+solution = snd . foldl1 combine $ cancellables where
+    combine (a, b) (c, d) = 
+      let (a', b', g) = (a*c, b*d, gcd a' b') 
+      in (a' `div` g, b' `div` g)
 
-main = do print solutions
+main = do
+  print cancellables
+  print solution
