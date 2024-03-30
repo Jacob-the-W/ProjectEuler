@@ -1,3 +1,5 @@
+module PrjEuler48 where
+
 solution :: Integer
 solution = foldl (\x y -> (x+y^y) `mod` (10^10)) 0 [1..1000]
 

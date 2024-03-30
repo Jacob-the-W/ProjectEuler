@@ -1,6 +1,8 @@
--- Digit cancelling fractions like 49/98 = 4/8 even though crossing 9s isnt valid.
+module PrjEuler33 where
 
 import Data.List ( (\\) )
+
+-- Digit cancelling fractions like 49/98 = 4/8 even though crossing 9s isnt valid.
 
 isCancellable :: (Int, Int) -> Bool
 isCancellable (a,b) =

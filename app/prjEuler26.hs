@@ -1,6 +1,12 @@
-import Primes (order, primes)
-import Data.List
+module PrjEuler26 where
 
-solution = snd . maximum . map (\x->(order 10 x, x)) . takeWhile (<1000) $ primes \\ [2,5]
+import Primes (primes, order)
 
-main = print solution
+import Data.List ( (\\) )
+
+s :: Int
+s = let start = takeWhile (<1000) (primes\\[2,5])
+    in snd . maximum $ [(order 10 a, a)|a<-start]
+
+main::IO()
+main = do print s

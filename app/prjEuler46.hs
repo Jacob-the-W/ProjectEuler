@@ -1,3 +1,5 @@
+module PrjEuler46 where
+
 -- smallest odd composite that cannot be written as 
 -- the sum of a prime and twice a square
 

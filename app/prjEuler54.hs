@@ -1,4 +1,5 @@
-module Main where
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
+module PrjEuler54 where
 import Data.List ( group, nub, sort, sortBy )
 import Data.Ord ( Down(Down), comparing )
 
@@ -12,7 +13,6 @@ data Rank = Two | Three | Four | Five | Six | Seven | Eight | Nine |
             deriving (Eq, Ord, Enum, Bounded)
 
 instance Show Rank where
-  show :: Rank -> String
   show r =   [(['2'..'9'] ++ "TJQKA") !! fromEnum r]
 
 data Card = Card { rank :: Rank, suit :: Suit } deriving (Eq)
@@ -34,18 +34,20 @@ data HandRank = HighCard Hand | OnePair Rank | TwoPairs Rank Rank |
 
 instance Show HandRank where
  show hr = case hr of
-  HighCard hand         -> "High Card:       "
-  OnePair rank          -> "One Pair:        "
-  TwoPairs rank1 rank2  -> "Two Pairs:       "
-  ThreeOfAKind rank     -> "Three of a Kind: "
-  Straight rank         -> "Straight:        "
-  Flush rank            -> "Flush:           "
-  FullHouse rank1 rank2 -> "Full House:      "
-  FourOfAKind rank      -> "Four of a Kind:  "
-  StraightFlush rank    -> "Straight Flush:  "
+  HighCard _         -> "High Card:       "
+  OnePair _          -> "One Pair:        "
+  TwoPairs _ _  -> "Two Pairs:       "
+  ThreeOfAKind _     -> "Three of a Kind: "
+  Straight _         -> "Straight:        "
+  Flush _            -> "Flush:           "
+  FullHouse _ _ -> "Full House:      "
+  FourOfAKind _      -> "Four of a Kind:  "
+  StraightFlush _    -> "Straight Flush:  "
   RoyalFlush            -> "Royal Flush:     "
 
 readCard :: String -> Card
+readCard [] = error "Empty String"
+readCard (x:[]) = error $ "Invalid Card: " ++ [x]
 readCard [r,s] = Card { rank = readRank r, suit = readSuit s }
   where
     readRank r = case r of
@@ -54,12 +56,15 @@ readCard [r,s] = Card { rank = readRank r, suit = readSuit s }
       '6' -> Six;   '7' -> Seven
       '8' -> Eight; '9' -> Nine
       'T' -> Ten;   'J' -> Jack;
-      'Q' -> Queen; 'K' -> King; 'A' -> Ace
+      'Q' -> Queen; 'K' -> King; 'A' -> Ace; 
+      _ -> error "Invalid Rank"
     readSuit s = case s of
       'C' -> Clubs
       'D' -> Diamonds
       'H' -> Hearts
       'S' -> Spades
+      _ -> error "Invalid Suit"
+readCard _ = error "Invalid format"
 
 groups :: Hand -> [(Int, Rank)]
 groups hand = sort $ (\(g:gs) -> (length (g:gs), g)) <$> group (rank <$> hand)
@@ -113,7 +118,7 @@ solution = length . filter ((==1) . uncurry winner)
 
 main::IO()
 main = do
-    inputGames <- readFile "p054_poker.txt"
+    inputGames <- readFile "data\\p054_poker.txt"
     let games = makeHands . splitAt 5 . map readCard . words <$> lines inputGames
     mapM_ putStrLn $ uncurry winnerString <$> take 10 games
     print . solution $ games

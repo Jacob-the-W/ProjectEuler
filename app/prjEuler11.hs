@@ -1,3 +1,6 @@
+module PrjEuler11 where
+
+array :: [[Int]]
 array=
   [[08,02,22,97,38,15,00,40,00,75,04,05,07,78,52,12,50,77,91,08],
   [49,49,99,40,17,81,18,57,60,87,17,40,98,43,69,48,04,56,62,00],
@@ -20,10 +23,19 @@ array=
   [20,73,35,29,78,31,90,01,74,31,49,71,48,86,81,16,23,57,05,54],
   [01,70,54,71,83,51,54,69,16,92,33,48,61,43,52,01,89,19,67,48]]
 
+upDownMax :: Int
 upDownMax       = maximum [product [array!!((i+k) `mod` 20)!!j|k<-[0..3]]|i<-[0..19],j<-[0..19]]
+
+leftRightMax :: Int
 leftRightMax    = maximum [product [array!!i!!((j+k) `mod` 20)|k<-[0..3]]|i<-[0..19],j<-[0..19]]
+
+backSlashMax :: Int
 backSlashMax    = maximum [product [array!!((i+k) `mod` 20)!!((j+k) `mod` 20)|k<-[0..3]]|i<-[0..19],j<-[0..19]]
+
+forwardSlashMax :: Int
 forwardSlashMax = maximum [product [array!!((i+k) `mod` 20)!!((j-k) `mod` 20)|k<-[0..3]]|i<-[0..19],j<-[0..19]]
+
+solution :: Int
 solution = maximum [upDownMax,leftRightMax,backSlashMax,forwardSlashMax]
 
 main :: IO()

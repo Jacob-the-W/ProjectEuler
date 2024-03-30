@@ -1,6 +1,6 @@
-module Main (main, ws) where
+module PrjEuler31 where
 
-ws :: Int -> [Int] -> Int
+ws :: Int -> [Int] -> Int   
 ws 0 _ = 1
 ws _ [] = 0
 ws n (c:cs) = sum [ws (n - x*c) cs | x <- [0..n `div` c]]

@@ -1,3 +1,4 @@
+module PrjEuler22 where
 {--
 Using names.txt (right click and 'Save Link/Target As...'), a 46K text file containing over five-thousand first names, begin by sorting it into alphabetical order. Then working out the alphabetical value for each name, multiply this value by its alphabetical position in the list to obtain a name score.
 
@@ -8,8 +9,8 @@ What is the total of all the name scores in the file?
 --}
 
 
-import Data.Char
-import Data.List
+import Data.Char ( ord )
+import Data.List ( sort )
 
 -- list::[(Char,Int)] -- list of [('A',1),('B',2),..]
 -- list = map (\x -> (x,ord x - 64)) ['A'..'Z']
@@ -22,7 +23,7 @@ score (i,name) = i*nameValue name
 
 main::IO()
 main = do
-   input <- readFile "p022_names.txt"
+   input <- readFile "data\\p022_names.txt"
    let listOfStrings = sort $ read ("[" ++ input ++ "]")::[String]
    let indexedList = zip [1..] listOfStrings
    let scores = map score indexedList

@@ -1,6 +1,15 @@
-threeDigitNums = [100..999]
-products = [x*y|x<-threeDigitNums,y<-threeDigitNums]
-solution = maximum $ filter (\x -> show x == reverse (show x)) products
+module PrjEuler4 where
+
+products :: [Int]
+products = let xs = [100..999] in [x*y|x<-xs,y<-xs]
+
+isPalindrome :: Int -> Bool
+isPalindrome n = 
+  let s = show n 
+  in s == reverse s
+
+solution :: Int
+solution = maximum . filter isPalindrome $ products
 
 main :: IO()
 main = do

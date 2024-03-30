@@ -1,3 +1,4 @@
+module PrjEuler19 where
 --1 Jan 1900 was a Monday.
 
 daysInMonth :: Int -> Int -> Int
@@ -7,12 +8,14 @@ daysInMonth y m
     | m `elem` [1, 3, 5, 7, 8, 10, 12] = 31
     | otherwise = error "Invalid month"
 --monday = 1
+dayOfWeek :: Int -> Int -> Int -> Int
 dayOfWeek 1900 1 0 = 0
 dayOfWeek y m d =
   (dayOfWeek 1900 1 0 + sum [daysInMonth ys ms|ys<-[1900..y-1],ms<-[1..12]]
                       + sum [daysInMonth y ms|ms<-[1..m-1]]
                       + d) `mod` 7
 
+solution :: Int
 solution = length $ filter (==0)
   [dayOfWeek years months 1|years<-[1901..2000],months<-[1..12]]
 

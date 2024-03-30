@@ -1,14 +1,15 @@
-import Primes (primes')
+module PrjEuler49 where
+
+import Primes (primes, isPrime)
 import Data.List (group,sort)
-import Data.IntMap qualified as M
+import qualified Data.IntMap as M
+import Data.IntMap (IntMap)
 
-isPrime n = 
-  let r = floor . sqrt $ fromIntegral n
-  in all (\p -> n `rem` p /=0) . takeWhile (<=r) $ primes'
-
-candidates = M.fromDistinctAscList . zip [0..] . takeWhile (<10000) $ dropWhile (<1000) primes'
+candidates :: IntMap Int
+candidates = M.fromDistinctAscList . zip [0..] . takeWhile (<10000) $ dropWhile (<1000) primes
 
 -- if pi > pj let n = pi -pj, need to check pj - n = pj - (pi - pj) = 2*pj - pi is prime
+isPermutations :: [Int] -> Bool
 isPermutations = null . tail . group . map (sort . show)
 
 solution :: Int

@@ -1,6 +1,10 @@
-import Primes (primes)
+module PrjEuler10 where
 
-solution = sum $ takeWhile (<2*10^6) primes
+import Primes (primesToUA)
+import Data.List (foldl')
+
+solution :: Int
+solution = foldl' (+) 0 $ primesToUA 2000000
 
 main :: IO ()
 main = do print solution

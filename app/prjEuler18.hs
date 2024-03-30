@@ -1,3 +1,6 @@
+module PrjEuler18 where
+
+list :: [[Int]]
 list = 
   [[75],
   [95,64],
@@ -16,9 +19,11 @@ list =
   [04,62,98,27,23,09,70,98,73,93,38,53,60,04,23]]
 
 
+maximumPathSum :: [[Int]] -> Int
 maximumPathSum = head . foldr1 (\xs ys ->zipWith (+) xs (zipWith max ys (tail ys)))
 
+solution :: Int
+solution =  maximumPathSum list
+
 main::IO()
-main = do
- 
-  print $ maximumPathSum list
+main = do print solution

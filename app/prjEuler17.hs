@@ -1,3 +1,6 @@
+module PrjEuler17 where
+
+lengthInEnglish :: Int -> Int
 lengthInEnglish x
     | x == 0  = 4 -- zero has 4 letters
     | x == 1  = 3 -- one has 3
@@ -41,6 +44,7 @@ lengthInEnglish x
     | x == 1000 = 11
     | otherwise = 0
 
+solution :: Int
 solution = sum [lengthInEnglish x|x<-[1..1000]]
 
 main :: IO()

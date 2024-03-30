@@ -1,6 +1,9 @@
+module PrjEuler3 where
+
 import Primes (primeFactors)
 
-solution = maximum $ primeFactors 600851475143
+solution :: Int
+solution = maximum . primeFactors $ 600851475143
 
 main :: IO ()
 main = do

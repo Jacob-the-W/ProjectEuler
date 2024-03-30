@@ -1,11 +1,13 @@
+module PrjEuler45 where
+
 pent :: [Int]
 pent = map (\n->n*(3*n-1) `div` 2) [1..]
 hex :: [Int]
-hex = map (\n->n*(2*n-1)) [1..]
+hex = map (\n->n*(2*n-1)) [143..]
 isHex :: Int -> Bool
-isHex t = t `elem` takeWhile (<= t) (drop 142 hex)
+isHex t = t `elem` takeWhile (<= t) hex
 result :: Int
-result =last $ take 2 $
+result = head. drop 1 $
          filter isHex pent
 
 main::IO()

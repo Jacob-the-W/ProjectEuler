@@ -1,3 +1,5 @@
+module PrjEuler40 where
+  
 import Data.Char
 
 list :: [Int]

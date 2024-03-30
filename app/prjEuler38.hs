@@ -1,3 +1,5 @@
+module PrjEuler38 where
+
 import Data.List
 {--
 Since we must have more than one multiple, we can't take the biggest pandigital

@@ -1,3 +1,6 @@
+module PrjEuler37 where
+
+import Primes (primes, isPrime)
 {--Problem 37
 The number 3797 has an interesting property. 
 Being prime itself, it is possible to continuously remove digits from left to 
@@ -10,12 +13,6 @@ Find the sum of the only eleven primes that are both truncatable from left to ri
 NOTE: 2, 3, 5, and 7 are not considered to be truncatable primes.
 --}
 
-import Primes (primes')
-
-isPrime :: Int -> Bool
-isPrime n =
-  let r = floor . sqrt . fromIntegral $ n
-  in all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes')
 
 -- cant start or end with 1,4,6,8,9. cant end with 2 or 5. 
 -- 23 -> 2 or 3 works, smallest example.
@@ -46,7 +43,7 @@ rightTruncate :: Int -> Int
 rightTruncate = (`div` 10)
 
 presolution :: [Int]
-presolution = take 11 $ dropWhile (<23) $ filter tests primes'
+presolution = take 11 $ dropWhile (<23) $ filter tests primes
 
 solution :: Int
 solution = sum presolution

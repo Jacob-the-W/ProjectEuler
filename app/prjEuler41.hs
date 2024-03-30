@@ -1,10 +1,7 @@
-import Primes (primes')
-import Data.List ( permutations )
+module PrjEuler41 where
 
-isPrime :: Int -> Bool
-isPrime n = 
-    let r = floor . sqrt . fromIntegral $ n 
-    in all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes')
+import Primes (isPrime)
+import Data.List ( permutations )
 
 pandigitalNumbers :: Int -> [Int]
 pandigitalNumbers nDigits  = read <$> (permutations . take nDigits $ "123456789")

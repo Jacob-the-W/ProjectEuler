@@ -1,5 +1,10 @@
-import Data.List
+{-# LANGUAGE TupleSections #-}
+module PrjEuler29 where
+import qualified Data.Map as Map
+
+solution :: Int
+solution = length . Map.keys . Map.fromList . map (,()) $ [a^b|a<-[2..100],b<-[2..100]]
 
 main::IO()
 main = do
-  print $ length $ nub [a^b|a<-[2..100],b<-[2..100]] -- not optimized, but [2..100]x[2..100] has 99*99*9801 elements, so not too horrible to nub.
+  print solution 

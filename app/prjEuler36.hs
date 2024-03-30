@@ -1,3 +1,4 @@
+module PrjEuler36 where
 
 import Primes (digitsBase)
 {-- 

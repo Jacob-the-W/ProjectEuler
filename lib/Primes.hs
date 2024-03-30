@@ -6,14 +6,17 @@
 --    The Primes module also re-exports the following function:
 --    '%': From Data.Ratio
 module Primes
-  ( -- * Prime numbers
+  ( -- * Classes 
+    Special(..),
+
+    -- * Prime numbers
     -- **Numbers
-    primes, composites, compositesTo, primes', primesToUA,
+    composites, compositesTo, primesToUA, sieveUA,
     -- **Tests
-     isPrime, isPrime',
+     isPrime,
     -- **Functions
-    primePowers,  primePowersListed, primeFactors, primeFactors', primePowers',
-    multiplyPrimeFactors, numOfDistinctPrimeFactors,  totient, charmichael,
+    primePowers,  primePowersListed, primeFactors,
+    multiplyPrimeFactors, distinctPrimesCount,  totient, charmichael,
 
     -- * Divisors
     divisors, numOfDivisors, propDivisors, numOfPropDivisors, highlyComposites, largelyComposites,
@@ -31,31 +34,35 @@ module Primes
     digits, digitsBase, undigits, modPow,
 
     -- * Utility functions
-    checkLoop, merge, setMinus, outer,
+    merge, setMinus, outer,
 
     -- * Re-exports
     (%) -- ^ From 'Data.Ratio'. Creates a 'Ratio' (fraction) from two 'Integral' numbers. For example, `(5 % 3)` creates the fraction 5/3.
   ) where
 
-import Data.List ( group, sort, scanl', (\\))
-import Data.Ratio ( (%), denominator, numerator )
+import Data.List ( group, scanl', (\\))
+import Data.Ratio ( (%), denominator, numerator, Ratio )
 import Control.Monad ( forM_, when )
-import Data.Array
 import Data.Array.ST
     ( readArray, writeArray, runSTUArray, MArray(newArray) )
 import Data.Array.Unboxed ( UArray, assocs )
-import Data.IntMap qualified as Map
-import qualified Data.Set as Set
-import Data.IntSet qualified as IntSet
+import qualified Data.IntMap as Map
 
+-- |
+-- See 'primesToUA'
+-- @
+-- > [2*i+1 | (i,True) <- assocs $ sieveUA 7]
+-- [3,5,7]
+-- @
+-- 
 sieveUA :: Int -> UArray Int Bool
 sieveUA top = runSTUArray $ do
     let m = (top-1) `div` 2
         r = floor . sqrt $ fromIntegral top + 1
     sieve <- newArray (1,m) True      -- :: ST s (STUArray s Int Bool)
     forM_ [1..r `div` 2] $ \i -> do
-      isPrime <- readArray sieve i
-      when isPrime $ do               -- ((2*i+1)^2-1)`div`2 == 2*i*(i+1)
+      isPrime_ <- readArray sieve i
+      when isPrime_ $ do               -- ((2*i+1)^2-1)`div`2 == 2*i*(i+1)
         forM_ [2*i*(i+1), 2*i*(i+2)+1..m] $ \j -> do
           writeArray sieve j False
     return sieve
@@ -73,7 +80,7 @@ sieveUA top = runSTUArray $ do
 -- (0.32 secs, 467,224,000 bytes)
 -- @
 primesToUA :: Int -> [Int]
-primesToUA top = 2 : [i*2+1 | (i,True) <- Data.Array.Unboxed.assocs $ sieveUA top]
+primesToUA top = 2 : [i*2+1 | (i,True) <- assocs $ sieveUA top]
 
 -- |
 -- Prints coprime pairs (a,b) with 0<=a<=b<=n, in order. Equivalently, rationals between [0,1]. Uses properties of the mediant, and symmetry about 1/2.
@@ -101,6 +108,7 @@ primesToUA top = 2 : [i*2+1 | (i,True) <- Data.Array.Unboxed.assocs $ sieveUA to
 -- [1,2,33,3045,304193]
 -- (0.00 secs, 1,095,320 bytes)
 -- @
+farey :: Int -> [(Int, Int)]
 farey n
   |n == 0 = [(0,1)]
   |n == 1 = [(0,1),(1,1)]
@@ -110,10 +118,10 @@ farey n
   where
     go [] _ = []
     go [x] _ = [x]
-    go (x:y:xs) n
-      | q > n = x : go (y:xs) n
-      | otherwise = go (x:m:y:xs) n
-      where m@(p,q) = mediant x y
+    go (x:y:xs) z
+      | q > z = x : go (y:xs) z
+      | otherwise = go (x:m:y:xs) z
+      where m@(_,q) = mediant x y
             mediant (a,b) (c,d) = (a+c,b+d)
 
 -- | 
@@ -131,48 +139,49 @@ farey n
 -- is the basis of the algorithm.
 -- Example:
 -- @gcdext 3 5 == [2,-1,1] @ as @3*2-1*5 = 1@
-gcdext a 0 = [1,0,a]
+gcdext :: Integral a => a -> a -> (a, a, a)
+gcdext a 0 = (1,0,a)
 gcdext a b =
   let (q,r) = a `quotRem` b
-      [s,t,g] = gcdext b r
-  in [t,s-q*t,abs g]
+      (s,t,g) = gcdext b r
+  in (t,s-q*t,abs g)
 
--- | The command primes generates the infinite list of primes. Algorithm is trial division, so slow for large lists.
--- 
--- @
--- >takeWhile (<100) primes
--- [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
--- (0.02 secs, 453,616 bytes)
--- >length . takeWhile (<=10^6) $ primes
--- 78498
--- (0.37 secs, 1,445,390,656 bytes)
---  @
-primes :: Integral a => [a]
-primes = 2 : filter isPrime [3,5..] where
-  isPrime n =
-    let r = floor . sqrt . fromIntegral $ n
-    in all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes)
 
--- |
--- primes' is just like primes, but uses Int, and a base 210 wheel instead of sieving on odds. Much faster, great if you know all inputs are bounded by @maxBound :: Int@.
--- 
--- @
--- > takeWhile (<100) primes'
--- [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
--- (0.00 secs, 138,920 bytes)
--- > length . takeWhile (<=10^6) $ primes'
--- 78498
--- (0.04 secs, 27,135,656 bytes)
--- @
-primes' :: [Int]
-primes' = 2 : filter isPrime wheel where
-  isPrime n = 
-    let r = floor . sqrt . fromIntegral $ n 
-    in all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes')
-  wheel  = 3:5:7: drop 1 ( scanl' (+) 1 (cycle wheel'))
-  wheel' = [10,2,4,2,4,6,2,6,4,2,4,6,6,2,6,4,2,6,4,6,8,4,2,4,
+class Special a where
+  -- | The command primes generates the infinite list of primes. Algorithm is trial division, so slow for large lists.
+  -- 
+  -- @
+  -- >takeWhile (<100) primes
+  -- [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
+  -- (0.02 secs, 453,616 bytes)
+  -- >length . takeWhile (<=10^6) $ primes
+  -- 78498
+  -- (0.37 secs, 1,445,390,656 bytes)
+  --  @
+   primes :: [a]
+
+instance Special Int where
+   primes = 2 : filter isPrime wheel where
+     wheel  = 3:5:7: drop 1 ( scanl' (+) 1 (cycle wheel'))
+     wheel' = [10,2,4,2,4,6,2,6,4,2,4,6,6,2,6,4,2,6,4,6,8,4,2,4,
            2,4,8,6,4,6,2,4,6,2,6,6,4,2,4,6,2,6,4,2,4,2,10,2]
 
+instance Special Integer where
+  primes = 2 : filter isPrime [3,5..]
+
+{-# SPECIALISE primes :: [Integer] #-}
+{-# SPECIALISE primes :: [Int] #-}
+
+-- | 
+-- Trial division for primality testing. If input is an Int, uses a better wheel sieve to make primes for trial division.
+-- Otherwise, uses the wheel of just odds and Integer primes.
+isPrime :: (Special a, Integral a) => a -> Bool
+isPrime n =
+    let r = floor . sqrt . fromIntegral $ n
+    in (n >= 2) && all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes)
+
+{-# SPECIALISE isPrime :: Integer -> Bool #-}
+{-# SPECIALISE isPrime :: Int -> Bool #-}
 -- |
 -- Infinite stream of composite numbers. Constructed via list difference of [2..] and primes. See 'setMinus'. This appears slightly faster than filtering by not . isPrime.
 -- 
@@ -187,7 +196,10 @@ primes' = 2 : filter isPrime wheel where
 -- [4,6,8,9,10,12,14,15,16,18,20,21,22,24,25,26,27,28,30,32]
 -- (0.00 secs, 66,784 bytes)
 -- @
+composites :: (Special a, Integral a) => [a]
 composites = setMinus [2..] primes
+{-# SPECIALISE composites :: [Integer] #-}
+{-# SPECIALISE composites :: [Int] #-}
 
 -- | 
 -- The sieve for primes is only for odd primes, so a list merge of the odd primes and the even composites is the full list of composites.
@@ -211,31 +223,13 @@ compositesTo top = merge [4,6..top] [i*2+1 | (i,False) <- Data.Array.Unboxed.ass
 -- [100,102,104,105,106,108,110,111,112,114,115,116,117,118,119,120]
 -- (0.00 secs, 131,656 bytes)
 -- @
+setMinus :: Ord a => [a] -> [a] -> [a]
 setMinus xs [] = xs
 setMinus [] _  = []
 setMinus (x:xs) (y:ys)
-  |x == y  = setMinus xs ys
-  |x < y   = x : setMinus xs (y:ys)
-  |x > y   = setMinus (x:xs) ys
-
-
--- |
--- Trial division check of all primes below the sqrt of the input.
--- 
--- @
--- >isPrime (2^31-1)
--- True
--- @
-isPrime :: Integral a => a -> Bool
-isPrime n =
-  let r = floor . sqrt . fromIntegral $ n
-  in (n >= 2) && all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes)
-
--- | Trial division with an unboxed sieve. Can be faster for large inputs, but requires lots of memory if you're doing this a lot.
-isPrime' :: Int -> Bool
-isPrime' n = (n >= 2) && ((n == 2) || (not . any (\p -> n `rem` p == 0) . primesToUA . floor . sqrt) (fromIntegral n))
-
-
+  | x == y   = setMinus xs ys
+  | x < y    = x : setMinus xs (y:ys)
+  |otherwise = setMinus (x:xs) ys
 
 -- |
 -- Trial division sieve on integral types. Large inputs may work, but if its divisors are too large, will take forever.
@@ -244,35 +238,32 @@ isPrime' n = (n >= 2) && ((n == 2) || (not . any (\p -> n `rem` p == 0) . primes
 -- >primeFactors (2^3*3^5*5^7)
 -- [2,2,2,3,3,3,3,3,5,5,5,5,5,5,5]
 -- @
-primeFactors :: Integral t => t -> [t]
-primeFactors n = factors n primes
- where
-  factors 1 _                  = []
-  factors m (p:ps) | m < p*p   = [m]
-                   | r == 0    = p : factors q (p:ps)
-                   | otherwise = factors m ps
+primeFactors :: (Special t, Integral t) => t -> [t]
+primeFactors n | 1 == signum n = factors n primes
+               | otherwise =  factors (-n) primes where
+  factors 0 _ = []
+  factors 1 _ = []
+  factors m (p:ps)
+      | m < p*p = [m]
+      | r == 0  = p : factors q (p:ps)
+      | otherwise = factors m ps
    where (q,r) = quotRem m p
-
--- |
--- For Ints.
-primeFactors' :: Int -> [Int]
-primeFactors' n = factors n primes'
- where
-  factors 1 _                  = []
-  factors m (p:ps) | m < p*p   = [m]
-                   | r == 0    = p : factors q (p:ps)
-                   | otherwise = factors m ps
-   where (q,r) = quotRem m p
+  factors _ _ = error "primes exhausted in primeFactors"
+{-# SPECIALISE primeFactors :: Integer -> [Integer] #-}
+{-# SPECIALISE primeFactors :: Int -> [Int] #-}
 
 -- |  Maps a positive integer to its prime factorization as a list of [(prime,powers)]
 -- >primePowers (2^3*3^5*5^7)
 -- [(2,3),(3,5),(5,7)]
-primePowers:: Integral a => a -> [(a,Int)]
-primePowers = map (\(p:ps) -> (p, length $ p:ps)) . group . primeFactors
-
--- | For Ints
-primePowers' :: Int -> [(Int,Int)]
-primePowers' = map (\(p:ps) -> (p, length $ p:ps)) . group . primeFactors'
+primePowers:: (Special a, Integral a) => a -> [(a,Int)]
+primePowers = map groupLengths . group . primeFactors where
+  groupLengths [] = undefined
+  -- group [] == []; group [2] = [[2]]. 
+  -- Mapping over an empty list does nothing, so we can safely assume the list is non-empty, even if primeFactors is empty
+  groupLengths [g] = (g,1)
+  groupLengths (g:gs) = (g,1+length gs)
+{-# SPECIALISE primePowers :: Integer -> [(Integer, Int)] #-}
+{-# SPECIALISE primePowers :: Int -> [(Int, Int)] #-}
 
 -- |
 -- Like primePowers, but a list of lists all prime powers which divide the number instead. Used with 'outer' and 'merge' to create a list of all divisors.
@@ -281,8 +272,11 @@ primePowers' = map (\(p:ps) -> (p, length $ p:ps)) . group . primeFactors'
 -- >primePowersListed (2^3*3^5*5^7)
 -- [[1,2,4,8],[1,3,9,27,81,243],[1,5,25,125,625,3125,15625,78125]]
 -- @
-primePowersListed n = map (\(a,b) -> [(a^)] <*> [0..b]) (primePowers n)
-
+primePowersListed :: (Special b, Integral b) => b -> [[b]]
+primePowersListed n = divisors' <$> primePowers n where
+   divisors' (a, b) = [(a^)] <*> [0..b]
+{-# SPECIALISE primePowersListed :: Integer -> [[Integer]] #-}
+{-# SPECIALISE primePowersListed :: Int -> [[Int]] #-}
 
 -- |
 -- Used to multiply numbers together by finding their prime factorizations, then adding powers to multiply.
@@ -317,19 +311,23 @@ primePowersListed n = map (\(a,b) -> [(a^)] <*> [0..b]) (primePowers n)
 -- [(2,9995),(3,4996),(5,2499),(7,1665),(11,998),(13,832),(17,624),(19,554),(23,452),(29,355)]
 -- (0.00 secs, 138,992 bytes)
 -- @
-multiplyPrimeFactors xs = f . sort $ primePowers =<< xs where
+multiplyPrimeFactors :: (Special a, Integral a) => [a] -> [(a, Int)]
+multiplyPrimeFactors xs = f . mergeAll $ primePowers <$> xs where
   f [] = []
   f [(p,n)] = [(p,n)]
-  f (x@(p,n):(y@(q,m):xs)) = if p == q then f ((p,m+n):xs) else (p,n):f (y:xs)
-
+  f (x@(p,n):(y@(q,m):ys)) = if p == q then f ((p,m+n):ys) else x:f (y:ys)
+{-# SPECIALISE multiplyPrimeFactors :: [Integer] -> [(Integer, Int)] #-}
+{-# SPECIALISE multiplyPrimeFactors :: [Int] -> [(Int, Int)] #-}
 
 -- |
 -- @
--- > numOfDistinctPrimeFactors $ (2*3*5)^4
+-- > distinctPrimesCount $ (2*3*5)^4
 -- 3
 -- @
-numOfDistinctPrimeFactors = length . primePowers
-
+distinctPrimesCount :: (Special a, Integral a) => a -> Int
+distinctPrimesCount = length . primePowers
+{-# SPECIALISE distinctPrimesCount :: Integer -> Int #-}
+{-# SPECIALISE distinctPrimesCount :: Int -> Int #-}
 -- |
 -- Checks for all even powers in the prime factorization. Unsuitable for numbers with large smallest prime factors. If you need speed, consider
 -- 
@@ -339,13 +337,19 @@ numOfDistinctPrimeFactors = length . primePowers
 --   in r^2==n
 -- @
 -- , which will fail for large inputs due to floating point error.
+isSquare :: (Special a, Integral a) => a -> Bool
 isSquare n =
  (n >= 0) && all (even . snd) (primePowers n)
+{-# SPECIALISE isSquare :: Integer -> Bool #-}
+{-# SPECIALISE isSquare :: Int -> Bool #-}
 
 
 -- | See 'isSquare'.
+isCube :: (Special a, Integral a) => a -> Bool
 isCube n =
  (n >= 0) && all (((==0) . (`mod` 3)) . snd) (primePowers n)
+{-# SPECIALISE isCube :: Integer -> Bool #-}
+{-# SPECIALISE isCube :: Int -> Bool #-}
 
 -- | See 'isSquare', but for perfect powers. 
 -- 
@@ -353,12 +357,15 @@ isCube n =
 -- > filter isPower [1..100]
 -- [1,4,8,9,16,25,27,32,36,49,64,81,100]
 -- @ 
-isPower 1 = True
-isPower x =
-  let pf@(p:ps) = primePowers x
-      powers = map snd pf
-      g = foldr1 gcd powers
-  in all ((>1) . snd) pf && (null ps || g > 1)
+isPower :: (Special a, Integral a) => a -> Bool
+isPower x = let pf = primePowers x in case primePowers x of
+  [] -> False
+  (_:ps) ->
+    let powers = map snd pf
+        g = foldr1 gcd powers
+    in all (>1) powers && (null ps || g > 1)
+{-# SPECIALISE isPower :: Integer -> Bool #-}
+{-# SPECIALISE isPower :: Int -> Bool #-}
 
 -- |
 -- Outer product of two lists with a given function.
@@ -380,6 +387,7 @@ isPower x =
 -- > outer (^) (take 5 primes) [0..4]
 -- [[1,2,4,8,16],[1,3,9,27,81],[1,5,25,125,625],[1,7,49,343,2401],[1,11,121,1331,14641]]
 -- @
+outer :: (t1 -> t2 -> a) -> [t1] -> [t2] -> [[a]]
 outer f xs ys = [[f x y | y<-ys]|x<-xs]
 
 
@@ -394,8 +402,20 @@ outer f xs ys = [[f x y | y<-ys]|x<-xs]
 -- > divisors (2^2*3^2*5)
 -- [1,2,3,4,5,6,9,10,12,15,18,20,30,36,45,60,90,180]
 -- @
+divisors :: (Special a, Integral a) => a -> [a]
 divisors 1 = [1]
-divisors n =   foldr1 (\x y -> foldr1 merge $ outer (*) x y) (primePowersListed n)
+divisors n = foldr1 (\x y -> foldr1 merge $ outer (*) x y) (primePowersListed n)
+{-# SPECIALISE divisors :: Integer -> [Integer] #-}
+{-# SPECIALISE divisors :: Int -> [Int] #-}
+
+mergeAll :: Ord a => [[a]] -> [a]
+mergeAll [x] = x
+mergeAll xs = mergeAll (mergePairs xs)
+
+mergePairs :: Ord a => [[a]] -> [[a]]
+mergePairs (a:b:xs) = merge a b : mergePairs xs
+mergePairs xs = xs
+
 
 -- |
 -- Expects two sorted lists, and merges them. Not lazy in either argument, so while you can merge infinite lists, you have to cut it off.
@@ -406,6 +426,7 @@ divisors n =   foldr1 (\x y -> foldr1 merge $ outer (*) x y) (primePowersListed 
 -- > merge [1..5] [2,4,6]
 -- [1,2,2,3,4,4,5,6]
 -- @
+merge :: Ord a => [a] -> [a] -> [a]
 merge x [] = x
 merge [] y = y
 merge (x:xs) (y:ys)
@@ -413,15 +434,22 @@ merge (x:xs) (y:ys)
   | otherwise =  y:merge (x:xs) ys
 
 -- | Divisors, not including the input. 
+propDivisors :: (Special a, Integral a) => a -> [a]
 propDivisors n = if n<=1 then [] else init . divisors $ n
+{-# SPECIALISE propDivisors :: Integer -> [Integer] #-}
+{-# SPECIALISE propDivisors :: Int -> [Int] #-}
 
 -- | Uses the prime factorization directly to calculate the sum of divisors. 
-sumDivisors :: Integral a => a -> a
+sumDivisors :: (Special a, Integral a) => a -> a
 sumDivisors n = if n == 0 then 0 else product $  map (\(a,b)-> (a^(b+1)-1) `div` (a-1)) $ primePowers n
+{-# SPECIALISE sumDivisors :: Integer -> Integer #-}
+{-# SPECIALISE sumDivisors :: Int -> Int #-}
 
 -- | See 'sumDivisors', 'propDivisors' vs 'divisors'
-sumPropDivisors :: Integral a => a -> a
+sumPropDivisors :: (Special a, Integral a) => a -> a
 sumPropDivisors n = sumDivisors n - n
+{-# SPECIALISE sumPropDivisors :: Integer -> Integer #-}
+{-# SPECIALISE sumPropDivisors :: Int -> Int #-}
 
 -- | Amicable pairs are numbers which are each others sum of proper divisors.
 -- Amicable Pairs = [(220,284),(1184,1210),(2620,2924),(5020,5564),(6232,6368),..]
@@ -430,9 +458,12 @@ sumPropDivisors n = sumDivisors n - n
 -- > filter isAmicable [1..10000]
 -- [220,284,1184,1210,2620,2924,5020,5564,6232,6368]
 -- @
+isAmicable :: (Special a, Integral a) => a -> Bool
 isAmicable  n =
   let m = sumPropDivisors n
   in (m /= n) &&  (sumPropDivisors m == n)
+{-# SPECIALISE isAmicable :: Integer -> Bool #-}
+{-# SPECIALISE isAmicable :: Int -> Bool #-}
 
 -- |
 -- A perfect number is equal to the sum of its proper divisors. An abundant has the sum larger than itself. And a deficient has the sum lower than itself.
@@ -445,12 +476,23 @@ isAmicable  n =
 -- > take 10 . filter isDeficient $ [2..]
 -- [2,3,4,5,7,8,9,10,11,13]
 -- @
+isPerfect :: (Special a, Integral a) => a -> Bool
 isPerfect   n = sumPropDivisors n == n
+
 -- | See 'isPerfect' 
+isAbundant :: (Special a, Integral a) => a -> Bool
 isAbundant  n = sumPropDivisors n >  n
+
 -- | See 'isPerfect' 
+isDeficient :: (Special a, Integral a) => a -> Bool
 isDeficient n = sumPropDivisors n <  n
 
+{-# SPECIALISE isPerfect :: Integer -> Bool #-}
+{-# SPECIALISE isPerfect :: Int -> Bool #-}
+{-# SPECIALISE isAbundant :: Integer -> Bool #-}
+{-# SPECIALISE isAbundant :: Int -> Bool #-}
+{-# SPECIALISE isDeficient :: Integer -> Bool #-}
+{-# SPECIALISE isDeficient :: Int -> Bool #-}
 
 {- |
 Initial sketch using lists, not much better than just a filter. Now using Data.IntMap implementation, much faster.
@@ -510,17 +552,23 @@ abundantsTo n = Map.keys $ go Map.empty start where
 -- This is implemented in numOfDivisors, numOfPropDivisors.
 -- 
 -- @
--- >do numOfDivisors (2^3*3^5*5^7); do numOfPropDivisors (2^3*3^5*5^7); do numOfDistinctPrimeFactors (2^3*3^5*5^7);
+-- >do numOfDivisors (2^3*3^5*5^7); do numOfPropDivisors (2^3*3^5*5^7); do distinctPrimesCount (2^3*3^5*5^7);
 -- 192
 -- 191
 -- 3
 -- @
 -- 
 -- Clearly, 4*6*8=192.
+numOfDivisors :: (Special a, Integral a) => a -> Int
 numOfDivisors n = product [b+1|(_,b)<-primePowers n]
+{-# SPECIALISE numOfDivisors :: Integer -> Int #-}
+{-# SPECIALISE numOfDivisors :: Int -> Int #-}
 
 -- |  See 'numOfDivisors' - 1.
+numOfPropDivisors :: (Special a, Integral a) => a -> Int
 numOfPropDivisors n = numOfDivisors n - 1
+{-# SPECIALISE numOfPropDivisors :: Integer -> Int #-}
+{-# SPECIALISE numOfPropDivisors :: Int -> Int #-}
 
 -- |
 -- Highly composites are numbers (>=1) which have strictly more divisors than any number below them.
@@ -529,17 +577,23 @@ numOfPropDivisors n = numOfDivisors n - 1
 -- >take 25 $ highlyComposites
 -- [1,2,4,6,12,24,36,48,60,120,180,240,360,720,840,1260,1680,2520,5040,7560,10080,15120,20160,25200,27720]
 -- @
+highlyComposites :: (Special a, Integral a) => [a]
 highlyComposites =
-  let f [] = []; f (x@(a,b):xs) = x:dropWhile ((<=a) . fst) (f xs)
+  let f [] = []; f (x@(a,_):xs) = x:dropWhile ((<=a) . fst) (f xs)
   in  map snd . f $ map (\n->(numOfDivisors n, n)) (1:[2,4..])
+{-# SPECIALISE highlyComposites :: [Integer] #-}
+{-# SPECIALISE highlyComposites :: [Int] #-}
 
 
 -- | 
 -- Related to the 'highlyComposites', but they have at least as many divisors as every number below them. 
 -- The highly composites are a subset of this by definition.
+largelyComposites :: (Special a, Integral a) => [a]
 largelyComposites =
-  let f [] = []; f (x@(a,b):xs) = x:dropWhile ((<a) . fst) (f xs)
+  let f [] = []; f (x@(a,_):xs) = x:dropWhile ((<a) . fst) (f xs)
   in  map snd . f $ map (\n->(numOfDivisors n, n)) (1:2:3:[4,6..])
+{-# SPECIALISE largelyComposites :: [Integer] #-}
+{-# SPECIALISE largelyComposites :: [Int] #-}
 
 -- |
 -- totient n returns the number of elements 1<= k <= n where gcd k n == 1, but calculated directly from the prime factorization. Equivalently, the number of fractions @0 <= a\/n <= 1@ where a\/n is a fully reduced fraction.
@@ -557,7 +611,11 @@ largelyComposites =
 -- But we will not use the list to calculate totient, we use the prime factors instead.
 -- 
 -- We use the modified form of p^n*(1-1/p) = p^(n-1)*(p-1) and only work on the prime powers themselves.
-totient n = foldr ((*) . (\(p,n)-> p^(n-1)*(p-1))) 1 (primePowers n)
+totient :: (Special b, Integral b) => b -> b
+totient n = foldr ((*) . (\(p,m)-> p^(m-1)*(p-1))) 1 (primePowers n)
+{-# SPECIALISE totient :: Int -> Int #-}
+{-# SPECIALISE totient :: Integer -> Integer #-}
+
 
 -- |
 -- The Charmichael function (sometimes "reduced totient") returns the minimum m such that a^m = 1 (mod n) for all a coprime to n. See 'totient' for related.
@@ -568,17 +626,25 @@ totient n = foldr ((*) . (\(p,n)-> p^(n-1)*(p-1))) 1 (primePowers n)
 -- @
 -- 
 -- Note @map (^2) [1,5,7,11] == [1,25,49,121]@
-charmichael :: Integral b => b -> b
+charmichael :: (Special b, Integral b) => b -> b
 charmichael n = foldr (lcm . f) 1 (primePowers n) where
     f (p,r)
       | p == 2 && r > 3 = (p^(fromIntegral r-1)*(p-1)) `div` 2
       | otherwise =  p^(fromIntegral r-1)*(p-1)
+{-# SPECIALISE charmichael :: Integer -> Integer #-}
+{-# SPECIALISE charmichael :: Int -> Int #-}
 
 -- | The summative totient, summing the totient of 1 up to the totient of the input. If you need multiple values, consider the list form 'sumTotients'. See 'farey'.
+sumTotient :: (Special b, Integral b) => b -> b
 sumTotient n = foldr ((+) . totient) 1 [1..n]
+{-# SPECIALISE sumTotient :: Integer -> Integer #-}
+{-# SPECIALISE sumTotient :: Int -> Int #-}
 
 -- | Infinite list of the sums if you need to print multiple. See 'farey'.
-sumTotients = scanl' (+) 1 (map totient [1..])
+sumTotients :: (Special b, Integral b) => [b]
+sumTotients = scanl (+) 1 (totient <$> [1..])
+{-# SPECIALISE sumTotients :: [Integer] #-}
+{-# SPECIALISE sumTotients :: [Int] #-}
 
 -- |
 -- It can be shown that the multiplicative order of a number a modulo b, i.e.,
@@ -614,13 +680,15 @@ sumTotients = scanl' (+) 1 (map totient [1..])
 -- > putStrLn $ prettyPrint (1%13) (1+6*2)
 -- 0.076923076923
 -- @
-order :: Integral p => p -> p -> p
+order :: (Special p, Integral p) => p -> p -> p
 order a b = case test of
   [] -> start
   (t:_) -> t
   where
     start = charmichael b
     test = dropWhile (\n -> modPow a n b 1 /=1) (propDivisors start)
+{-# SPECIALISE order :: Integer -> Integer -> Integer #-}
+{-# SPECIALISE order :: Int -> Int -> Int #-}
 
 -- |
 -- Infinite list of digits generated through the division algorithm. Terminating decimals will end with an infinite tail of 0. 0th-index is the integer part. 
@@ -634,6 +702,7 @@ order a b = case test of
 -- > take 2 $ fractionDigits 100 4
 -- [25,0]
 -- @
+fractionDigits :: Integral t => t -> t -> [t]
 fractionDigits a b =
   let (p,q) = a `quotRem` b
   in p:fractionDigits (10*q) b
@@ -666,9 +735,14 @@ fractionDigits a b =
 -- 17.00000000000000000000000000052650402
 -- 17.00000000000000000000000000000000000
 -- @
+prettyPrint :: (Integral a, Show a) => Ratio a -> Int -> [Char]
 prettyPrint ratio numDigits=
   if ratio < 0 then '-':prettyPrint (-ratio) numDigits
-  else concat . (\(x:xs)->x:".":xs) . map show . take numDigits $ fractionDigits (numerator ratio) (denominator ratio)
+  else concat . addDecimal . map show . take numDigits $ fractionDigits a b where
+    (a, b) = (numerator ratio, denominator ratio)
+    addDecimal [] = ["did you mean to take 0 digits?"] 
+    addDecimal [x] = [x]
+    addDecimal (x:xs) = x:".":xs -- the head of 'fractionDigits' is the integer part
 
 -- |
 -- Actual implementation now relies on modular powers, the nth decimal digit of a/b is a*(10^n) `mod` (10*b) `div` b `mod` 10. See 'modPow'. Very quick.
@@ -704,6 +778,7 @@ prettyPrint ratio numDigits=
 --   in  if n <= nonrepeating then basis!!n
 --       else if repeating /= 0 then take repeating ((\(_,(_,c))->c) decimals)!!((n-nonrepeating-1) `mod` repeating) else 0
 -- @
+nthDigit :: (Integral t, Integral a) => t -> a -> a -> a
 nthDigit n a b = a*modPow 10 n (10*b) 1 `div` b  `mod` 10
 
 -- |
@@ -729,15 +804,18 @@ nthDigit n a b = a*modPow 10 n (10*b) 1 `div` b  `mod` 10
 -- | 
 -- Mobius function. Returns 0 for numbers that have a squared prime factor. 
 -- For square-free numbers: if we have an even number of prime factors, 1, and odd, -1.
+mu :: (Special p, Integral p, Num a) => p -> a
 mu x
   | sqf = if even n then 1 else -1
   | otherwise = 0
-   where (sqf, ps, n) = (isSquareFree x, primePowers x, length ps)
-         isSquareFree x = all ((<2) . snd) ps
+   where (sqf, ps, n) = (isSquareFree, primePowers x, length ps)
+         isSquareFree = all ((<2) . snd) ps
 
-
-modPow b e 1 r = 0
-modPow b 0 m r = r
+-- |
+-- Modular power function with modulus. Standard repeatedly square and multiply algorithm.
+modPow :: (Integral t1, Integral t2) => t2 -> t1 -> t2 -> t2 -> t2
+modPow _ _ 1 _ = 0
+modPow _ 0 _ r = r
 modPow b e m r
   | e `mod` 2 == 1 = modPow b' e' m (r * b `mod` m)
   | otherwise = modPow b' e' m r
@@ -756,6 +834,7 @@ modPow b e m r
 -- > take 8 $ fractionDigitsBase 16 1 19
 -- [0,0,13,7,9,4,3,5]
 -- @
+fractionDigitsBase :: Integral a => a -> a -> a -> [a]
 fractionDigitsBase n a b =
   let (p,q) = a `quotRem` b
   in undigits (digitsBase n p):fractionDigitsBase n (n*q) b
@@ -768,6 +847,7 @@ fractionDigitsBase n a b =
 -- @
 -- 
 -- Equivalent to 'digitsBase 10'
+digits :: Integral a => a -> [a]
 digits = digitsBase 10
 
 -- |
@@ -779,9 +859,10 @@ digits = digitsBase 10
 -- > digitsBase 16 255
 -- [15,15]
 -- @
-digitsBase n a = reverse $ go a where
- go a =
-   let (p,q) = a `quotRem` n
+digitsBase :: Integral p => p -> p -> [p]
+digitsBase n m = reverse $ go m where
+ go x =
+   let (p,q) = x `quotRem` n
    in if p==0 then [q] else q:go p
 
 -- |
@@ -797,32 +878,8 @@ digitsBase n a = reverse $ go a where
 -- > length . digits $ (product [1..10])
 -- 7
 -- @
+undigits :: Integral a => [a] -> a
 undigits = foldl1 (\a b->10*a + b)
-
--- |
--- Accumulates elements until an element is found or breaks 10^6. Returns the accumulated list not including repeats, in reverse order. Useful when iterating, e.g.,  'sumPropDivisors'.
--- 
--- @
--- > checkLoop [1..4]
--- [4,3,2,1]
--- > checkLoop [1,2,3,4,1]
--- [4,3,2,1]
--- > checkLoop [1,1,2]
--- [1]
--- > mapM_ (print . reverse . checkLoop . (iterate sumPropDivisors)) [6,220,12496,138]  -- 6 is perfect, 220 is an amicable pair, 12496 is a member of an amicable chain.
--- [6]
--- [220,284]
--- [12496,14288,15472,14536,14264]
--- [138,150,222,234,312,528,960,2088,3762,5598,6570,10746,13254,13830,19434,20886,21606,25098,26742,26754,40446,63234,77406,110754,171486,253458,295740,647748]
--- @
-checkLoop xs = go [] xs
-    where
-        go acc [] = acc
-        go [] (x:xs) = go [x] xs
-        go acc (x:xs)
-            | x > 10^6 = acc
-            | x `elem` acc = acc
-            | otherwise = go (x:acc) xs
 
 -- |
 -- A better way to generate amicable pairs than 'isAmicable'.
@@ -839,9 +896,12 @@ checkLoop xs = go [] xs
 -- (29.81 secs, 92,461,503,256 bytes)
 -- @
 -- The number's are only approximately equal because those filters are asking different questions, but the time difference is the key here.
+amicablePairs :: (Special a, Integral a) => [(a,a)]
 amicablePairs = go [220..] where
   go [] = [];
   go (x:xs) =
     let y = sumPropDivisors x
         z = sumPropDivisors y
     in if x < y && x == z then (x,y):go (xs \\ [y]) else go xs
+{-# SPECIALISE amicablePairs :: [(Integer,Integer)] #-}
+{-# SPECIALISE amicablePairs :: [(Int,Int)] #-}

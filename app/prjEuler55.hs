@@ -1,4 +1,4 @@
-import Data.List
+module PrjEuler55 where
 
 isPalindrome :: Eq a => [a] -> Bool
 isPalindrome x = x == reverse x
@@ -13,7 +13,7 @@ f :: (String, b) -> (String, b)
 f (a,b) = (lychrel a, b)
 
 solution :: [(String, Integer)]
-solution = foldr (\x acc -> filter (not . isPalindrome . fst) $ map f acc)
+solution = foldr (\_ acc -> filter (not . isPalindrome . fst) $ map f acc)
   setup (replicate 23 ()) -- (replicate 50 ()) but 23 is enough for this specific case
 
 main::IO()
