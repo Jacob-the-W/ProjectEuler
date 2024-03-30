@@ -115,16 +115,6 @@ problemsPrint =
       putStrLn ("      " ++ diff_ns ++ " nanoseconds.\n")
       appendFile "logs.txt" $ show i ++ " " ++ diff_ns ++ "\n")
 
-time :: IO t -> IO Rational
-time action = do
-    x <- getSystemTime
-    let (!s1,!ns1) = (systemSeconds x, systemNanoseconds x)
-    _ <- action
-    y <- getSystemTime
-    let (!s2, !ns2)= (systemSeconds y, systemNanoseconds y)
-        !diff = fromIntegral s2 - fromIntegral s1 + fromIntegral ns2%10^9 - fromIntegral ns1%10^9
-    return diff
-
 main :: IO ()
 main = do
     putStrLn "Enter a number from the following list:"
