@@ -2,19 +2,23 @@ module PrjEuler32 where
 
 import Data.List ( group, permutations )
 
-panDigitals :: [String]
-panDigitals = permutations "123456789"
+panDigitals :: [[Int]]
+panDigitals = permutations [1..9]
 
-test :: [Char] -> Int
-test [a,b,c,d,e,f,g,h,i] = 
-  let first = read [a,b]::Int --xx*yyy==zzzz case
-      second = read [c,d,e]::Int
-      rest = read [f,g,h,i]::Int    
-      first' = read [a]::Int  --x*yyyy=zzzz case
-      second' = read [b,c,d,e]::Int
+undigits :: [Int] -> Int
+undigits = foldl1 (\x y -> 10*x + y)
+
+test :: [Int] -> Int
+test [a,b,c,d,e,f,g,h,i] =
+  let first = undigits [a,b] --xx*yyy==zzzz case
+      second = undigits [c,d,e]
+      rest = undigits [f,g,h,i]
+      first' = undigits [a]  --x*yyyy=zzzz case
+      second' = undigits [b,c,d,e]
       -- xxyy=zzzzz? 99 *99 = 9801, so impossible. 
   in if first * second == rest || first' * second' == rest then rest else 0
-  
+test _ = error "Wrong number of digits for test"
+
 products :: [Int]
 products = filter (/=0) $ test <$> panDigitals
 uniqueProducts :: [Int]

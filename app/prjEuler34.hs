@@ -3,15 +3,21 @@ module PrjEuler34 where
 
 import Data.Char
 
+readDigits :: Show a => a -> [Int]
 readDigits n = digitToInt <$> show n
 
+nums :: [Int]
 nums = [3..2450160]
+
+solutions :: [Int]
 solutions = [n|n<-nums,n==sumOfFactorialOfDigits n]
 
+sumOfFactorialOfDigits :: Show a => a -> Int
 sumOfFactorialOfDigits n = sum . map factorial $ readDigits n
 
+factorial :: Integral a => a -> a
 factorial n = product [1..n]
 
-main::IO()
+main :: IO()
 main = do
   print $ sum solutions

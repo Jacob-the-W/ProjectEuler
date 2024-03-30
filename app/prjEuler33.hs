@@ -19,6 +19,7 @@ solution = snd . foldl1 combine $ cancellables where
       let (a', b', g) = (a*c, b*d, gcd a' b') 
       in (a' `div` g, b' `div` g)
 
+main :: IO ()
 main = do
   print cancellables
   print solution
