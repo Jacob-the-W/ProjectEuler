@@ -4,7 +4,6 @@ import Primes (primes, isPrime)
 
 -- every prime past 10 must end in a 1, 3, 7, or 9. 
 -- 2 and 5 are the only primes that can end in 2 or 5.
-
 potentials :: [Int]
 potentials = [2,5] ++ filter (all (`elem` "1379") . show) (takeWhile (<=10^6) primes)
 
