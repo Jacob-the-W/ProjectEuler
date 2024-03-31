@@ -20,7 +20,7 @@ name:               ProjectEuler
 -- PVP summary:     +-+------- breaking API changes
 --                  | | +----- non-breaking API additions
 --                  | | | +--- code changes with no API change
-version:            1.0.0.0
+version:            1.1.0.0
 
 -- A short (one-line) description of the package.
 -- synopsis:
@@ -54,7 +54,24 @@ extra-doc-files:    CHANGELOG.md
 -- extra-source-files:
 
 common warnings
-    ghc-options: -Wall -O2 -Wno-type-defaults
+    ghc-options: -Wall -Wno-type-defaults
+
+library Primes
+    main-is:         Main.hs
+
+    other-modules:    Primes
+
+    -- LANGUAGE extensions used by modules in this package.
+    -- other-extensions:
+
+    -- Other library packages from which modules are imported.
+    build-depends:    base ^>=4.17.2.1, array, containers, time >= 1.12.2 && <1.13 
+
+    -- Directories containing source files.
+    hs-source-dirs:   app, lib
+
+    -- Base language which the package is written in.
+    default-language: Haskell2010
 
 executable ProjectEuler
     -- Import common warning flags.
