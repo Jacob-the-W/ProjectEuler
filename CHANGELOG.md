@@ -7,7 +7,10 @@
 * Updated gcdext to return Integral a => (a, a, a) instead of a list, to appease the compiler warnings.
 * The lists involved always have 3 arguments.
 * Updated amicablePairs to be [(Int,Int)] again, 'SPECIALIZE' wasn't working, and [(Int, Int)] is faster.
-[](
+* Updated app/prjEuler45.hs, added comments
+
+Times (see code view):
+<!--
 Before:
 > length $ takeWhile ((<=10^6) . snd) amicablePairs
 40
@@ -22,7 +25,6 @@ After:
 (0.33 secs, 1,367,095,560 bytes)
 
 -->
-)
 
 ## 1.0.0.0 -- 2024-03-30
 
