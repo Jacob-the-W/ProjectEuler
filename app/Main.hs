@@ -1,12 +1,12 @@
 {-# LANGUAGE BangPatterns #-}
 module Main where
 
-import Data.Time.Clock.System ( getSystemTime, systemSeconds, systemNanoseconds, SystemTime (systemNanoseconds) )
 import qualified Data.Map as Map
 import Data.Map (Map)
-import Primes (prettyPrint)
 import Data.Ratio
+import Data.Time.Clock.System ( getSystemTime, systemSeconds, systemNanoseconds, SystemTime (systemNanoseconds) )
 
+import Primes (prettyPrint)
 import PrjEuler1 (main)
 import PrjEuler2 (main)
 import PrjEuler3 (main)
@@ -65,14 +65,16 @@ import PrjEuler55 (main)
 import PrjEuler56 (main)
 import PrjEuler57 (main)
 import PrjEuler58 (main)
+import PrjEuler59 (main)
 import PrjEuler95 (main)
 import PrjEuler96 (main)
 
 solutions :: Map Int (IO ())
-solutions = Map.fromDistinctAscList 
-  [(-1, runAll), (1, PrjEuler1.main),(2, PrjEuler2.main),(3, PrjEuler3.main),
-  (4, PrjEuler4.main),(5, PrjEuler5.main),(6, PrjEuler6.main),
-  (7, PrjEuler7.main),(8, PrjEuler8.main),(9, PrjEuler9.main),
+solutions = Map.fromDistinctAscList
+  [(-1, runAll),
+  (1, PrjEuler1.main),  (2, PrjEuler2.main),  (3, PrjEuler3.main),
+  (4, PrjEuler4.main),  (5, PrjEuler5.main),  (6, PrjEuler6.main),
+  (7, PrjEuler7.main),  (8, PrjEuler8.main),  (9, PrjEuler9.main),
   (10, PrjEuler10.main),(11, PrjEuler11.main),(12, PrjEuler12.main),
   (13, PrjEuler13.main),(14, PrjEuler14.main),(15, PrjEuler15.main),
   (16, PrjEuler16.main),(17, PrjEuler17.main),(18, PrjEuler18.main),
@@ -89,19 +91,20 @@ solutions = Map.fromDistinctAscList
   (49, PrjEuler49.main),(50, PrjEuler50.main),(51, PrjEuler51.main),
   (52, PrjEuler52.main),(53, PrjEuler53.main),(54, PrjEuler54.main),
   (55, PrjEuler55.main),(56, PrjEuler56.main),(57, PrjEuler57.main),
-  (58, PrjEuler58.main),(95, PrjEuler95.main),(96, PrjEuler96.main)]
+  (58, PrjEuler58.main),(59, PrjEuler59.main),(95, PrjEuler95.main),
+  (96, PrjEuler96.main)]
 
 runAll :: IO ()
 runAll = do problemsPrint . Map.toList $ Map.drop 1 solutions; do putStr "\nTotal"
-  
+
 problemsPrint :: [(Int, IO ())] -> IO ()
-problemsPrint = 
-    mapM_ (\(i,action) -> do 
+problemsPrint =
+    mapM_ (\(i,action) -> do
       putStrLn ("Problem " ++ show i ++ ":\n")
       x <- getSystemTime
-      
+
       let (!s1,!ns1) = (systemSeconds x, systemNanoseconds x)
-      do action 
+      do action
       y <- getSystemTime
       let (!s2, !ns2)= (systemSeconds y, systemNanoseconds y)
           !diff = fromIntegral s2 - fromIntegral s1 + fromIntegral ns2%1000000000 - fromIntegral ns1%1000000000 :: Rational
@@ -115,16 +118,44 @@ problemsPrint =
       putStrLn ("      " ++ diff_ns ++ " nanoseconds.\n")
       appendFile "logs.txt" $ show i ++ " " ++ diff_ns ++ "\n")
 
+cleanUpLogs :: IO ()
+cleanUpLogs = do
+  input <- lines <$> readFile "logs.txt"
+  let !pts = split . words <$> input where
+         split (p:(t:_)) = (p, t)
+         split _ = ("-1", "error")
+      !problems = fst <$> pts
+      !n_p = maximum $ length <$> problems
+      !problems' = pad <$> problems where
+        pad p = replicate (n_p - length p) ' ' ++ p
+      !times    = snd <$> pts
+      !n_t = maximum $ length <$> times
+      !times'   = pad <$> times where
+        pad t = replicate (n_t - length t) ' ' ++ t
+  writeFile "logs.txt" "Problem Time(ns)\n"
+  mapM_ (appendFile "logs.txt") $ zipWith (\p t -> p ++ " " ++ t ++ "\n") problems' times'
+
+
 main :: IO ()
 main = do
-    putStrLn "Enter a number from the following list:"
-    print $ Map.keys solutions
-    putStrLn "^ to run the corresponding Project Euler problem.\n"
-    putStrLn "Enter -1 to run all problems."
-    input <- getLine
-    let index = read input :: Int
-    if Map.member index solutions then problemsPrint [(index, solutions Map.! index)]
-    else putStrLn "Invalid input. Please enter a number from the list."
+  writeFile "logs.txt" "" -- make sure logs exist, and empty
+  
+  putStrLn "Enter a number from the following list:"
+  print $ Map.keys solutions
+  putStrLn "^ to run the corresponding Project Euler problem.\n"
+  putStrLn "Enter -1 to run all problems."
+  putStrLn
+     "Enter a space separated list of numbers to run multiple problems."
+  
+  input <- getLine
+  let indices = map read . words $ input
+  
+  mapM_ (\index -> do
+    if Map.member index solutions
+    then problemsPrint [(index, solutions Map.! index)]
+    else putStrLn $ "Invalid input: " ++ show index ++
+           ". Please enter a number from the list.") indices
+  cleanUpLogs
 
 
 

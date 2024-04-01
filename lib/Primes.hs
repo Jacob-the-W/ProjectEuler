@@ -923,6 +923,8 @@ fractionDigitsBase n a b =
 -- Equivalent to "'digitsBase' @10@"
 digits :: Integral a => a -> [a]
 digits = digitsBase 10
+{-# SPECIALISE digits :: Int -> [Int] #-}
+{-# SPECIALISE digits :: Integer -> [Integer] #-}
 
 -- |
 -- Generalized for arbitrary base. Does not support Hex encoding, instead stores as a list of digits.
@@ -938,6 +940,8 @@ digitsBase n m = reverse $ go m where
  go x =
    let (p,q) = x `quotRem` n
    in if p==0 then [q] else q:go p
+{-# SPECIALISE digitsBase :: Int -> Int -> [Int] #-}
+{-# SPECIALISE digitsBase :: Integer -> Integer -> [Integer] #-}
 
 -- |
 -- Intended to have undigits . digits == id, but it functions more akin to string concatenation.

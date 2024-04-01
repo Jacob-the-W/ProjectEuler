@@ -1,5 +1,12 @@
 # Revision history for ProjectEuler
 
+## 1.1.0.1 -- 2024-03-31
+
+* Added solution 59, without original solution. Original used the key.
+* Specialized digits functions in Primes.hs, as the duplicate in original 
+* Changed 54 to make Read instances for Card, Rank, Suit instead of custom read functions.
+* Added type signatures
+
 ## 1.1.0.0 -- 2024-03-31
 
 * Updated Primes.hs for haddock, may consider uploading haddock documentation, but 'cabal haddock-project' will generate it.
