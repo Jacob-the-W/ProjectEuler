@@ -7,7 +7,7 @@
 --    '%': From Data.Ratio
 module Primes
   ( -- *Numbers
-    
+
     -- ** Primes 
     Special(..), primesToUA, sieveUA,
 
@@ -19,16 +19,16 @@ module Primes
 
     -- **Functions
     primePowers,  primePowersListed, primeFactors,
-    multiplyPrimeFactors, distinctPrimesCount, 
+    multiplyPrimeFactors, distinctPrimesCount,
     totient, charmichael,
 
     -- * Divisors
-    divisors,  propDivisors, 
-    numOfDivisors, numOfPropDivisors, 
+    divisors,  propDivisors,
+    numOfDivisors, numOfPropDivisors,
     sumDivisors, sumPropDivisors,
 
     -- * Other number properties
-    isSquare, isSquareFree, isCube, isPower, order, gcdext, mu,  isAmicable, 
+    isSquare, isSquareFree, isCube, isPower, order, gcdext, mu,  isAmicable,
     isDeficient, isPerfect, isAbundant,
 
     -- * Fractions and ratios
@@ -39,7 +39,7 @@ module Primes
     digits, digitsBase, undigits, modPow,
 
     -- * Utility functions
-    mergeAll, merge, setMinus, outer, 
+    mergeAll, merge, setMinus, outer,
 
     -- * Re-exports
     (%) -- ^ From 'Data.Ratio'. Creates a 'Ratio' (fraction) from two 'Integral' numbers. For example, `(5 % 3)` creates the fraction 5/3.
@@ -278,7 +278,7 @@ primeFactors n | 1 == signum n = factors n primes
 -- [(2,3),(3,5),(5,7)]
 -- @
 primePowers:: (Special a, Integral a) => a -> [(a,Int)]
-primePowers = map groupLengths . group . primeFactors where
+primePowers n = groupLengths <$> (group . primeFactors $ n) where
   groupLengths [] = undefined
   -- group [] == []; group [2] = [[2]]. 
   -- Mapping over an empty list does nothing, so we can safely assume the list is non-empty,
@@ -335,10 +335,9 @@ primePowersListed n = divisors' <$> primePowers n where
 -- (0.00 secs, 139,048 bytes)
 -- @
 multiplyPrimeFactors :: (Special a, Integral a) => [a] -> [(a, Int)]
-multiplyPrimeFactors xs = f . mergeAll $ primePowers <$> xs where
-  f [] = []
-  f [(p,n)] = [(p,n)]
-  f (x@(p,n):(y@(q,m):ys)) = if p == q then f ((p,m+n):ys) else x:f (y:ys)
+multiplyPrimeFactors xs = groupLengths <$> (group . mergeAll $ primeFactors <$> xs) where
+  groupLengths [] = undefined
+  groupLengths (g:gs) = (g,1+length gs)
 {-# SPECIALISE multiplyPrimeFactors :: [Integer] -> [(Integer, Int)] #-}
 {-# SPECIALISE multiplyPrimeFactors :: [Int] -> [(Int, Int)] #-}
 
@@ -382,7 +381,7 @@ isCube n =
 -- @ 
 isPower :: (Special a, Integral a) => a -> Bool
 isPower x = let pf = primePowers x in case primePowers x of
-  [] -> False
+  [] -> True -- 0,1
   (_:ps) ->
     let powers = map snd pf
         g = foldr1 gcd powers
@@ -449,7 +448,7 @@ divisors n = foldr1 (\x y -> mergeAll $ outer (*) x y) (primePowersListed n)
 mergeAll :: Ord a => [[a]] -> [a]
 mergeAll [x] = x
 mergeAll xs = mergeAll (mergePairs xs) where
-  mergePairs (a:b:cs) = merge a b : mergePairs cs 
+  mergePairs (a:b:cs) = merge a b : mergePairs cs
   mergePairs cs = cs
 
 
@@ -611,15 +610,15 @@ abundantsTo n = Map.keys $ go Map.empty start where
 -- @
 -- 
 -- Clearly, 4*6*8=192.
-numOfDivisors :: (Special a, Integral a) => a -> Int
-numOfDivisors n = product [b+1|(_,b)<-primePowers n]
-{-# SPECIALISE numOfDivisors :: Integer -> Int #-}
+numOfDivisors :: (Special a, Integral a) => a -> a
+numOfDivisors n = product [fromIntegral b+1|(_,b)<-primePowers n]
+{-# SPECIALISE numOfDivisors :: Integer -> Integer #-}
 {-# SPECIALISE numOfDivisors :: Int -> Int #-}
 
 -- |  See 'numOfDivisors' - 1.
-numOfPropDivisors :: (Special a, Integral a) => a -> Int
+numOfPropDivisors :: (Special a, Integral a) => a -> a
 numOfPropDivisors n = numOfDivisors n - 1
-{-# SPECIALISE numOfPropDivisors :: Integer -> Int #-}
+{-# SPECIALISE numOfPropDivisors :: Integer -> Integer #-}
 {-# SPECIALISE numOfPropDivisors :: Int -> Int #-}
 
 -- |
@@ -799,7 +798,7 @@ prettyPrint ratio numDigits=
   if ratio < 0 then '-':prettyPrint (-ratio) numDigits
   else concat . addDecimal . map show . take numDigits $ fractionDigits a b where
     (a, b) = (numerator ratio, denominator ratio)
-    addDecimal [] = ["did you mean to take 0 digits?"] 
+    addDecimal [] = ["did you mean to take 0 digits?"]
     addDecimal [x] = [x]
     addDecimal (x:xs) = x:".":xs -- the head of 'fractionDigits' is the integer part
 

@@ -1,5 +1,9 @@
 # Revision history for ProjectEuler
 
+## 1.1.0.2 -- 2024-04-05
+
+* Changed some type signatures. In particular, numOfDivisors no longer returns Int values in case of larger numbers.
+
 ## 1.1.0.1 -- 2024-03-31
 
 * Added solution 59, without original solution. Original used the key.
