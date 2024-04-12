@@ -13,7 +13,7 @@ instance Read Suit where
     'H' -> [(Hearts, "")]
     'S' -> [(Spades, "")]
     _ -> []
-  readsPrec _ _ = []    
+  readsPrec _ _ = []
 
 instance Show Suit where
     show s = ["CDHS" !! fromEnum s]
@@ -59,6 +59,10 @@ instance Ord Card where
 -- easier to reason about.
 type Hand = [Card]
 
+-- makes sure the list is sorted correctly for the rest of the functions to make sense.
+makeHand :: [Card] -> Hand
+makeHand = sortBy (flip compare)
+
 data HandRank = HighCard Hand | OnePair Rank | TwoPairs Rank Rank |
   ThreeOfAKind Rank | Straight Rank | Flush Rank | FullHouse Rank Rank |
   FourOfAKind Rank | StraightFlush Rank | RoyalFlush deriving (Eq, Ord)
@@ -67,15 +71,14 @@ instance Show HandRank where
  show hr = case hr of
   HighCard _         -> "High Card:       "
   OnePair _          -> "One Pair:        "
-  TwoPairs _ _  -> "Two Pairs:       "
+  TwoPairs _ _       -> "Two Pairs:       "
   ThreeOfAKind _     -> "Three of a Kind: "
   Straight _         -> "Straight:        "
   Flush _            -> "Flush:           "
-  FullHouse _ _ -> "Full House:      "
+  FullHouse _ _      -> "Full House:      "
   FourOfAKind _      -> "Four of a Kind:  "
   StraightFlush _    -> "Straight Flush:  "
-  RoyalFlush            -> "Royal Flush:     "
-
+  RoyalFlush         -> "Royal Flush:     "
 
 groups :: Hand -> [(Int, Rank)]
 groups hand = map groupLengths . sortBy (comparing length) . group $ rank <$> hand where
@@ -91,7 +94,7 @@ handRank hand
   | isFlush            = Flush lead
   | isStraight         = Straight lead
   | [1,1,3] == sizes   = ThreeOfAKind (gs !! 2)
-  | [1,2,2] == sizes   = TwoPairs (gs !! 2) (gs !! 1)
+  | [1,2,2] == sizes   = TwoPairs (gs !! 1) (gs !! 2)
   | [1,1,1,2] == sizes = OnePair (gs !! 3)
   | otherwise          = HighCard hand where
    lead = rank . head $ hand
@@ -105,35 +108,34 @@ handRank hand
       sweep (s:ss) = all (== s) ss
       sweep _ = undefined
 
-winner :: Hand -> Hand -> Int
-winner hand1 hand2
+type Game = (Hand, Hand)
+
+makeGame :: ([Card], [Card]) -> Game
+makeGame (a,b) = (makeHand a, makeHand b)
+
+winner :: Game -> Int
+winner (hand1, hand2)
     | rank1 > rank2 = 1
     | rank2 > rank1 = 2
     | hand1 > hand2 = 1
-    | hand1 == hand2 = 0
-    | otherwise = 2
+    | hand2 > hand1 = 2
+    | otherwise = 0 -- Perfect tie?
   where
     rank1 = handRank hand1
     rank2 = handRank hand2
 
-makeHand :: [Card] -> Hand  -- makes sure the list is sorted correctly for the rest of the functions to make sense.
-makeHand = sortBy (flip compare)
-
-makeHands :: ([Card], [Card]) -> (Hand, Hand)
-makeHands (a,b) = (makeHand a, makeHand b)
-
-winnerString :: Hand -> Hand -> String
-winnerString hand1 hand2 =
+winnerString :: Game -> String
+winnerString game@(hand1, hand2) =
     concat [show (handRank hand1), show hand1, " | ",
             show (handRank hand2), show hand2,
-            " -> Player ", show $ winner hand1 hand2, " wins."]
+            " -> Player ", show $ winner game, " wins."]
 
-solution :: [(Hand, Hand)] -> Int
-solution = length . filter ((==1) . uncurry winner)
+solution :: [Game] -> Int
+solution = length . filter ((==1) . winner)
 
 main::IO()
 main = do
     inputGames <- readFile "data\\p054_poker.txt"
-    let games = makeHands . splitAt 5 . map read . words <$> lines inputGames
-    mapM_ putStrLn $ uncurry winnerString <$> take 10 games
+    let games = makeGame . splitAt 5 . map read . words <$> lines inputGames
+    mapM_ putStrLn $ winnerString <$> take 10 games
     print . solution $ games
