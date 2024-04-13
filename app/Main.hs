@@ -1,8 +1,10 @@
 {-# LANGUAGE BangPatterns #-}
 module Main where
 
+import Control.Monad
 import qualified Data.Map as Map
 import Data.Map (Map)
+import Data.Maybe
 import Data.Ratio
 import Data.Time.Clock.System ( getSystemTime, systemSeconds, systemNanoseconds, SystemTime (systemNanoseconds) )
 
@@ -66,8 +68,14 @@ import PrjEuler56 (main)
 import PrjEuler57 (main)
 import PrjEuler58 (main)
 import PrjEuler59 (main)
+import PrjEuler60 (main)
 import PrjEuler95 (main)
 import PrjEuler96 (main)
+import Data.List
+import Text.Read (readMaybe)
+
+isIndex :: Int -> Bool
+isIndex = (`Map.member` solutions)
 
 solutions :: Map Int (IO ())
 solutions = Map.fromDistinctAscList
@@ -91,8 +99,8 @@ solutions = Map.fromDistinctAscList
   (49, PrjEuler49.main),(50, PrjEuler50.main),(51, PrjEuler51.main),
   (52, PrjEuler52.main),(53, PrjEuler53.main),(54, PrjEuler54.main),
   (55, PrjEuler55.main),(56, PrjEuler56.main),(57, PrjEuler57.main),
-  (58, PrjEuler58.main),(59, PrjEuler59.main),(95, PrjEuler95.main),
-  (96, PrjEuler96.main)]
+  (58, PrjEuler58.main),(59, PrjEuler59.main),(60, PrjEuler60.main),
+  (95, PrjEuler95.main), (96, PrjEuler96.main)]
 
 runAll :: IO ()
 runAll = do problemsPrint . Map.toList $ Map.drop 1 solutions; do putStr "\nTotal"
@@ -107,7 +115,9 @@ problemsPrint =
       do action
       y <- getSystemTime
       let (!s2, !ns2)= (systemSeconds y, systemNanoseconds y)
-          !diff = fromIntegral s2 - fromIntegral s1 + fromIntegral ns2%1000000000 - fromIntegral ns1%1000000000 :: Rational
+          !diff = fromIntegral s2 - fromIntegral s1 +
+            fromIntegral ns2%1000000000 -
+            fromIntegral ns1%1000000000 :: Rational
           !diffS = prettyPrint diff 9
           !diff_ms = prettyPrint (1000*diff) 6
           !diff_us = prettyPrint (1000000*diff) 3
@@ -118,9 +128,9 @@ problemsPrint =
       putStrLn ("      " ++ diff_ns ++ " nanoseconds.\n")
       appendFile "logs.txt" $ show i ++ " " ++ diff_ns ++ "\n")
 
-cleanUpLogs :: IO ()
-cleanUpLogs = do
-  input <- lines <$> readFile "logs.txt"
+cleanUpLogs :: FilePath -> IO ()
+cleanUpLogs logFile = do
+  input <- lines <$> readFile logFile
   let !pts = split . words <$> input where
          split (p:(t:_)) = (p, t)
          split _ = ("-1", "error")
@@ -132,30 +142,61 @@ cleanUpLogs = do
       !n_t = maximum $ length <$> times
       !times'   = pad <$> times where
         pad t = replicate (n_t - length t) ' ' ++ t
-  writeFile "logs.txt" "Problem Time(ns)\n"
-  mapM_ (appendFile "logs.txt") $ zipWith (\p t -> p ++ " " ++ t ++ "\n") problems' times'
+  writeFile logFile "Problem Time(ns)\n"
+  mapM_ (appendFile logFile) $ zipWith (\p t -> p ++ " " ++ t ++ "\n") problems' times'
 
+indexMessage :: [Int] -> [Int] -> String
+indexMessage indices badIndices
+  | -1 `elem` indices = "\nRan problems " ++ intercalate ", " (map show (drop 1 $ Map.keys solutions)) ++ "."
+  | otherwise = "\n" ++ case (indices, badIndices) of
+  ([] , [] ) -> "No problems entered at all?"
+  ([] , [_]) -> "Problem " ++ sBad ++ " not found."
+  ([] , _  ) -> "Problems " ++ sBad ++ " not found."
+  ([_], [] ) -> "Ran problem " ++ sGood ++ "."
+  ([_], [_]) -> "Ran problem " ++ sGood ++ ", but problem " ++ sBad ++ " not found."
+  ([_], _  ) -> "Ran problem " ++ sGood ++ ", but problems " ++ sBad ++ " not found."
+  (_  , [] ) -> "Ran problems " ++ sGood ++ "."
+  (_ , [_] ) -> "Ran problems " ++ sGood ++ ", but problem " ++ sBad ++ " not found."
+  (_  , _  ) -> "Ran problems " ++ sGood ++ ", but problems " ++ sBad ++ " not found."
+  where
+    sBad = intercalate ", " (show <$> badIndices)
+    sGood = intercalate ", " (show <$> indices)
+
+logMessage :: [Int] -> String
+logMessage indices =
+  (if null indices then "Because no valid problems were chosen, logs will not be modified.\n" ++
+    "If logs does not exist, it will not be created.\n\n"
+  else "Log file: logs.txt\n\n")  ++ replicate 80 '-' ++ "\n"
 
 main :: IO ()
 main = do
-  writeFile "logs.txt" "" -- make sure logs exist, and empty
-  
-  putStrLn "Enter a number from the following list:"
+  putStrLn "-- Project Euler solutions: Haskell --\n"
+
+  putStrLn "To exit, enter a blank line, or any non-numeric input."
+  putStrLn "To run a solution, enter a number from the following list:"
   print $ Map.keys solutions
   putStrLn "^ to run the corresponding Project Euler problem.\n"
-  putStrLn "Enter -1 to run all problems."
+  putStrLn "Enter -1 to run all problems (warning: long output)"
   putStrLn
      "Enter a space separated list of numbers to run multiple problems."
-  
+
   input <- getLine
-  let indices = map read . words $ input
-  
-  mapM_ (\index -> do
-    if Map.member index solutions
-    then problemsPrint [(index, solutions Map.! index)]
-    else putStrLn $ "Invalid input: " ++ show index ++
-           ". Please enter a number from the list.") indices
-  cleanUpLogs
 
+  let (indices, badIndices) = partition isIndex . map head . group . sort . 
+        mapMaybe (\x -> readMaybe x :: Maybe Int) $ words input
+      (nI, nBI) = (null indices, null badIndices)
 
+  unless nI $ writeFile "logs.txt" ""
 
+  mapM_ (\index ->  problemsPrint [(index, solutions Map.! index)]) indices
+  putStrLn $ indexMessage indices badIndices
+
+  unless nI (putStrLn "\nCreating logs...")
+  unless nI (cleanUpLogs "logs.txt")
+  unless nI (putStrLn "Logs created, cleaned up.")
+  putStrLn $ logMessage indices
+
+  let exitConditions = -1 `elem` indices || (nI && nBI)
+
+  when exitConditions (putStrLn "Exiting.")
+  unless exitConditions Main.main
