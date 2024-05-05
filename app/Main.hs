@@ -79,6 +79,7 @@ import PrjEuler70 (main)
 import PrjEuler71 (main)
 import PrjEuler95 (main)
 import PrjEuler96 (main)
+import PrjEuler100 (main)
 import Data.List
 import Text.Read (readMaybe)
 
@@ -111,7 +112,7 @@ solutions = Map.fromDistinctAscList
   (62, PrjEuler62.main),(63, PrjEuler63.main),(65, PrjEuler65.main),
   (66, PrjEuler66.main),(67, PrjEuler67.main),(69, PrjEuler69.main),
   (70, PrjEuler70.main),(71, PrjEuler71.main),(95, PrjEuler95.main),
-  (96, PrjEuler96.main)]
+  (96, PrjEuler96.main),(100,PrjEuler100.main)]
 
 runAll :: IO ()
 runAll = do problemsPrint . Map.toList $ Map.drop 1 solutions; do putStr "\nTotal"
