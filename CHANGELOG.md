@@ -18,7 +18,7 @@
 ## 1.1.0.1 -- 2024-03-31
 
 * Added solution 59, without original solution. Original used the key.
-* Specialized digits functions in Primes.hs, as the duplicate in original 
+* Specialized digits functions in Primes.hs, as the duplicate in original solution 59 was faster as it was only for Int. 
 * Changed 54 to make Read instances for Card, Rank, Suit instead of custom read functions.
 * Added type signatures
 
