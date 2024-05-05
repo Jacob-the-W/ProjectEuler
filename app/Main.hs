@@ -69,6 +69,14 @@ import PrjEuler57 (main)
 import PrjEuler58 (main)
 import PrjEuler59 (main)
 import PrjEuler60 (main)
+import PrjEuler62 (main)
+import PrjEuler63 (main)
+import PrjEuler65 (main)
+import PrjEuler66 (main)
+import PrjEuler67 (main)
+import PrjEuler69 (main)
+import PrjEuler70 (main)
+import PrjEuler71 (main)
 import PrjEuler95 (main)
 import PrjEuler96 (main)
 import Data.List
@@ -100,7 +108,10 @@ solutions = Map.fromDistinctAscList
   (52, PrjEuler52.main),(53, PrjEuler53.main),(54, PrjEuler54.main),
   (55, PrjEuler55.main),(56, PrjEuler56.main),(57, PrjEuler57.main),
   (58, PrjEuler58.main),(59, PrjEuler59.main),(60, PrjEuler60.main),
-  (95, PrjEuler95.main), (96, PrjEuler96.main)]
+  (62, PrjEuler62.main),(63, PrjEuler63.main),(65, PrjEuler65.main),
+  (66, PrjEuler66.main),(67, PrjEuler67.main),(69, PrjEuler69.main),
+  (70, PrjEuler70.main),(71, PrjEuler71.main),(95, PrjEuler95.main),
+  (96, PrjEuler96.main)]
 
 runAll :: IO ()
 runAll = do problemsPrint . Map.toList $ Map.drop 1 solutions; do putStr "\nTotal"

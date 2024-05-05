@@ -20,7 +20,7 @@ name:               ProjectEuler
 -- PVP summary:     +-+------- breaking API changes
 --                  | | +----- non-breaking API additions
 --                  | | | +--- code changes with no API change
-version:            1.1.0.3
+version:            1.1.0.4
 
 -- A short (one-line) description of the package.
 -- synopsis:
@@ -142,6 +142,14 @@ executable ProjectEuler
                       PrjEuler58
                       PrjEuler59
                       PrjEuler60
+                      PrjEuler62
+                      PrjEuler63
+                      PrjEuler65
+                      PrjEuler66
+                      PrjEuler67
+                      PrjEuler69
+                      PrjEuler70
+                      PrjEuler71
                       PrjEuler95
                       PrjEuler96
 

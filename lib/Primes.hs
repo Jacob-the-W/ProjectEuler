@@ -9,7 +9,7 @@ module Primes
   ( -- *Numbers
 
     -- ** Primes 
-    Special(..), primesToUA, sieveUA,
+    Special(primes), primesToUA, sieveUA,
 
     -- ** Other Numbers
     abundantsTo, amicablePairs, composites, compositesTo, highlyComposites, largelyComposites,
@@ -45,7 +45,7 @@ module Primes
     (%) -- ^ From 'Data.Ratio'. Creates a 'Ratio' (fraction) from two 'Integral' numbers. For example, `(5 % 3)` creates the fraction 5/3.
   ) where
 
-import Data.List ( group, scanl', (\\))
+import Data.List ( group, scanl', delete)
 import Data.Ratio ( (%), denominator, numerator, Ratio )
 import Control.Monad ( forM_, when )
 import Data.Array.ST
@@ -611,7 +611,7 @@ abundantsTo n = Map.keys $ go Map.empty start where
 -- 
 -- Clearly, 4*6*8=192.
 numOfDivisors :: (Special a, Integral a) => a -> a
-numOfDivisors n = product [fromIntegral b+1|(_,b)<-primePowers n]
+numOfDivisors = product . (fromIntegral . (+1) . snd <$>) . primePowers
 {-# SPECIALISE numOfDivisors :: Integer -> Integer #-}
 {-# SPECIALISE numOfDivisors :: Int -> Int #-}
 
@@ -692,10 +692,16 @@ sumTotient n = foldr ((+) . totient) 1 [1..n]
 {-# SPECIALISE sumTotient :: Int -> Int #-}
 
 -- | Infinite list of the sums if you need to print multiple. See 'farey'.
-sumTotients :: (Special b, Integral b) => [b]
-sumTotients = scanl (+) 1 (totient <$> [1..])
-{-# SPECIALISE sumTotients :: [Integer] #-}
-{-# SPECIALISE sumTotients :: [Int] #-}
+-- Note. Since this is Int, the sum will overfow at 2^63-1, which should happen
+-- around index 5 billion, but at that point even prime factoring will be slow.
+-- 
+-- @
+-- > sumTotients !! (10^8)
+-- 3039635516365909
+-- (72.67 secs, 111,736,312,616 bytes)
+-- @
+sumTotients :: [Int]
+sumTotients = scanl' (+) 1 (totient <$> [1..])
 
 -- |
 -- It can be shown that the multiplicative order of a number @a@ modulo @b@, i.e.,
@@ -968,7 +974,7 @@ undigits = foldl1 (\a b->10*a + b)
 -- > length $ filter isAmicable [1..10^6]
 -- 82
 -- (5.49 secs, 17,657,057,992 bytes)
--- > length . concat . takeWhile (not . null) $ (\(a,b)-> filter (<=(10^6)) [a,b]) <$> (amicablePairs)
+-- > length . concat . takeWhile (not . null) $ (\(a,b)-> filter (\<=(10^6)) [a,b]) \<$\> (amicablePairs)
 -- 82
 -- (0.39 secs, 1,562,132,760 bytes)
 -- > take 5 amicablePairs
@@ -981,4 +987,4 @@ amicablePairs = go [220..] where
   go (x:xs) =
     let y = sumPropDivisors x
         z = sumPropDivisors y
-    in if x < y && x == z then (x,y):go (xs \\ [y]) else go xs
+    in if x < y && x == z then (x,y):go (delete y xs) else go xs

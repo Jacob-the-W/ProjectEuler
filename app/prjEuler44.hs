@@ -19,8 +19,8 @@ differencesOfPentagons :: [(Int,Int,Int)]
 differencesOfPentagons = [(i,j,pentagon i - pentagon j)|i<-[1..],j<-[i-1,i-2..1]]
 
 solution :: (Int,Int,Int)
-solution = head $  filter (\(a,b,c) -> isPentagon (pentagon a + pentagon b)) $
-             filter (\(a,b,c)->isPentagon c) differencesOfPentagons
+solution = head $  filter (\(a, b, _) -> isPentagon (pentagon a + pentagon b)) 
+  $ filter (\(_ , _,c) -> isPentagon c) differencesOfPentagons
 --
 main :: IO()
 main = do

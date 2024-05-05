@@ -1,5 +1,16 @@
 # Revision history for ProjectEuler
 
+## 1.1.0.4 - 2024-05-04
+
+* In 'Primes' library, sumTotients has changed to [Int], specialization wasn't working, and is much faster.
+* Fixed some haddock documentation that was formatting functions as hypertext, errors involving < and >.
+* Problem 60 has been changed to a recursive algorithm instead of a manual psuedo-recursion.
+* Added problems 62, 63, 65, 66, 67, 69, 70, 71
+
+## 1.1.0.3 - 2024-4-13
+
+* Problem 60 added
+
 ## 1.1.0.2 -- 2024-04-05
 
 * Changed some type signatures. In particular, numOfDivisors no longer returns Int values in case of larger numbers.
