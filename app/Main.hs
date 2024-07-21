@@ -77,6 +77,7 @@ import PrjEuler67 (main)
 import PrjEuler69 (main)
 import PrjEuler70 (main)
 import PrjEuler71 (main)
+import PrjEuler75 (main)
 import PrjEuler95 (main)
 import PrjEuler96 (main)
 import PrjEuler100 (main)
@@ -111,8 +112,8 @@ solutions = Map.fromDistinctAscList
   (58, PrjEuler58.main),(59, PrjEuler59.main),(60, PrjEuler60.main),
   (62, PrjEuler62.main),(63, PrjEuler63.main),(65, PrjEuler65.main),
   (66, PrjEuler66.main),(67, PrjEuler67.main),(69, PrjEuler69.main),
-  (70, PrjEuler70.main),(71, PrjEuler71.main),(95, PrjEuler95.main),
-  (96, PrjEuler96.main),(100,PrjEuler100.main)]
+  (70, PrjEuler70.main),(71, PrjEuler71.main),(75, PrjEuler75.main), 
+  (95, PrjEuler95.main),(96, PrjEuler96.main),(100,PrjEuler100.main)]
 
 runAll :: IO ()
 runAll = do problemsPrint . Map.toList $ Map.drop 1 solutions; do putStr "\nTotal"
@@ -177,7 +178,7 @@ indexMessage indices badIndices
 logMessage :: [Int] -> String
 logMessage indices =
   (if null indices then "Because no valid problems were chosen, logs will not be modified.\n" ++
-    "If logs does not exist, it will not be created.\n\n"
+    "If logs.txt does not exist, it will not be created.\n\n"
   else "Log file: logs.txt\n\n")  ++ replicate 80 '-' ++ "\n"
 
 main :: IO ()
