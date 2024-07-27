@@ -1,8 +1,9 @@
 module PrjEuler96 (main) where
 
-import Data.List ( minimumBy )
 import Data.Array ( (!), (//), array, Array )
 import Data.Char ( digitToInt )
+import Data.List ( minimumBy )
+import Data.Ord (comparing)
 
 type Cell = Int
 
@@ -76,8 +77,7 @@ findEasiest :: [(Int, Int, [Cell])] -> (Int, Int, [Cell])
 findEasiest (s@(_,_,possible):ss)
   | length possible == 1 = s
   | otherwise =
-    minimumBy (\(_, _, pos) (_, _, pos')->
-      compare (length pos) (length pos')) (s:ss)
+    minimumBy (comparing (\(_, _, pos) -> length pos)) (s:ss)
 findEasiest [] = undefined
 
 replace :: (Int, Int) -> Cell -> Grid -> Grid
