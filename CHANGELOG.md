@@ -1,7 +1,7 @@
 # Revision history for ProjectEuler
 
 ## 1.1.0.6 2024-7-27-24
-* Added problems 70, 72, 73, 74, 76.
+* Added problems 72, 73, 74, 76.
 
 ## 1.1.0.5 - 2024-05-05
 * Added problem 100. Not a good algorithm, but my initial attempt took 26 hours, down to about 40s
