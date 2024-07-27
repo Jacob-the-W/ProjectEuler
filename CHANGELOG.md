@@ -1,6 +1,6 @@
 # Revision history for ProjectEuler
 
-## 1.1.0.6 2024-7-27-24
+## 1.1.0.6 2024-7-27
 * Added problems 72, 73, 74, 76.
 
 ## 1.1.0.5 - 2024-05-05
