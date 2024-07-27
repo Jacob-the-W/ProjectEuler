@@ -16,8 +16,8 @@ ratio :: Int -> Float
 ratio n = fromIntegral n/fromIntegral (totient n)
 
 solution :: Int
-solution = snd . minimum $  map (\n -> (ratio n,n)) $ filter (\n -> (isPermutation n $ totient n)) (compositesTo (10^7 - 1))
+solution = snd . minimum . map (\n -> (ratio n,n)) . filter (\n -> isPermutation n $ totient n) $ compositesTo (10^7 - 1)
 
 main :: IO()
 main = do
-  print $ solution
+  print solution

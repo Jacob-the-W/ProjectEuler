@@ -1,5 +1,12 @@
 # Revision history for ProjectEuler
 
+## 1.1.0.6 2024-7-27-24
+* Added problems 70, 72, 73, 74, 76.
+
+## 1.1.0.5 - 2024-05-05
+* Added problem 100. Not a good algorithm, but my initial attempt took 26 hours, down to about 40s
+* Added problem 75 later.
+
 ## 1.1.0.4 - 2024-05-04
 
 * In 'Primes' library, sumTotients has changed to [Int], specialization wasn't working, and is much faster.

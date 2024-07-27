@@ -77,7 +77,11 @@ import PrjEuler67 (main)
 import PrjEuler69 (main)
 import PrjEuler70 (main)
 import PrjEuler71 (main)
+import PrjEuler72 (main)
+import PrjEuler73 (main)
+import PrjEuler74 (main)
 import PrjEuler75 (main)
+import PrjEuler76 (main)
 import PrjEuler95 (main)
 import PrjEuler96 (main)
 import PrjEuler100 (main)
@@ -112,8 +116,10 @@ solutions = Map.fromDistinctAscList
   (58, PrjEuler58.main),(59, PrjEuler59.main),(60, PrjEuler60.main),
   (62, PrjEuler62.main),(63, PrjEuler63.main),(65, PrjEuler65.main),
   (66, PrjEuler66.main),(67, PrjEuler67.main),(69, PrjEuler69.main),
-  (70, PrjEuler70.main),(71, PrjEuler71.main),(75, PrjEuler75.main), 
-  (95, PrjEuler95.main),(96, PrjEuler96.main),(100,PrjEuler100.main)]
+  (70, PrjEuler70.main),(71, PrjEuler71.main),(72, PrjEuler72.main),
+  (73, PrjEuler73.main),(74, PrjEuler74.main), (75, PrjEuler75.main),
+  (76, PrjEuler76.main),(95, PrjEuler95.main),(96, PrjEuler96.main),
+  (100,PrjEuler100.main)]
 
 runAll :: IO ()
 runAll = do problemsPrint . Map.toList $ Map.drop 1 solutions; do putStr "\nTotal"
@@ -160,7 +166,7 @@ cleanUpLogs logFile = do
 
 indexMessage :: [Int] -> [Int] -> String
 indexMessage indices badIndices
-  | -1 `elem` indices = "\nRan problems " ++ intercalate ", " (map show (drop 1 $ Map.keys solutions)) ++ "."
+  | -1 `elem` indices = "\nRan problems " ++ intercalate ", " (map show . drop 1 . Map.keys $ solutions) ++ "."
   | otherwise = "\n" ++ case (indices, badIndices) of
   ([] , [] ) -> "No problems entered at all?"
   ([] , [_]) -> "Problem " ++ sBad ++ " not found."

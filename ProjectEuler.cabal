@@ -20,7 +20,7 @@ name:               ProjectEuler
 -- PVP summary:     +-+------- breaking API changes
 --                  | | +----- non-breaking API additions
 --                  | | | +--- code changes with no API change
-version:            1.1.0.5
+version:            1.1.0.6
 
 -- A short (one-line) description of the package.
 -- synopsis:
@@ -150,6 +150,11 @@ executable ProjectEuler
                       PrjEuler69
                       PrjEuler70
                       PrjEuler71
+                      PrjEuler72
+                      PrjEuler73
+                      PrjEuler74
+                      PrjEuler75
+                      PrjEuler76
                       PrjEuler95
                       PrjEuler96
                       PrjEuler100
@@ -158,7 +163,7 @@ executable ProjectEuler
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.17.2.1, array, containers, time >= 1.12.2 && <1.13 
+    build-depends:    base ^>=4.17.2.1, array, containers, time >= 1.12.2 && <1.13
 
     -- Directories containing source files.
     hs-source-dirs:   app, lib
