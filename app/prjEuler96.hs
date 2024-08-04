@@ -1,9 +1,7 @@
 module PrjEuler96 (main) where
 
-import Data.Array ( (!), (//), array, Array )
+import Data.Array ( (!), (//), array, listArray, Array )
 import Data.Char ( digitToInt )
-import Data.List ( minimumBy )
-import Data.Ord (comparing)
 
 type Cell = Int
 
@@ -28,7 +26,7 @@ col j (Sudoku grid) = [grid ! (i, j) | i <- [0..8]]
 type Grid = Array (Int, Int) Cell
 
 makeGrid :: [String] -> Grid
-makeGrid xs = array ((0,0), (8,8)) [((i,j), makeCell (xs !! i !! j)) | i <- [0..8], j <- [0..8]]
+makeGrid xs = listArray ((0,0), (8,8)) (map makeCell =<< xs)
 
 newtype Sudoku = Sudoku {getGrid :: Grid}
 
@@ -74,10 +72,12 @@ findEmpty :: Grid -> [(Int, Int)]
 findEmpty grid = [(i,j) | i <- [0..8], j <- [0..8], grid ! (i, j) == 0]
 
 findEasiest :: [(Int, Int, [Cell])] -> (Int, Int, [Cell])
-findEasiest (s@(_,_,possible):ss)
-  | length possible == 1 = s
-  | otherwise =
-    minimumBy (comparing (\(_, _, pos) -> length pos)) (s:ss)
+findEasiest (a@(_, _,posa):b@(_, _, posb):as)
+  | m == 1 = a
+  | m <= n = findEasiest (a:as)
+  | otherwise = findEasiest (b:as)
+  where (m, n) = (length posa, length posb)
+findEasiest [a] = a
 findEasiest [] = undefined
 
 replace :: (Int, Int) -> Cell -> Grid -> Grid
@@ -94,7 +94,8 @@ splitGrids strings =
 
 prettyAnswer :: Show p => Problem -> p -> [String]
 prettyAnswer Problem {getStr = n, getSudoku = start} end =
-  n :zipWith (\x y -> concat [x, "   ", y]) (lines . show $ start) (lines . show $ end)
+  n :zipWith combine (lines . show $ start) (lines . show $ end)
+    where combine x y = concat [x, "   ", y]
 
 corner :: Sudoku -> Int
 corner = foldl1 (\x y-> 10*x+y) . (\x->[getGrid x ! (0,j)|j<-[0..2]])
@@ -104,7 +105,8 @@ main = do
     input <- lines <$> readFile "data\\p096_sudoku.txt"
     let problems = map makeProblem . splitGrids $ input
         solutions = (solve . getSudoku ) =<< problems
-        (answers, corners) = unzip $ zipWith (\prob sol -> (prettyAnswer prob sol, corner sol)) problems solutions
+        (answers, corners) = unzip $ zipWith combine problems solutions
+          where combine prob sol = (prettyAnswer prob sol, corner sol)
         solution = sum corners
     mapM_ (putStrLn . unlines) answers
     print solution
