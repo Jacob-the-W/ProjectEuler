@@ -1,20 +1,19 @@
 module PrjEuler96 (main) where
 
-import Data.Array ( (!), (//), array, listArray, Array )
-import Data.Char ( digitToInt )
+import Data.Array.Unboxed
+    ( (!), (//), array, assocs, listArray, UArray )
+import Data.Char ( digitToInt, isDigit ) 
 
 type Cell = Int
 
 makeCell :: Char -> Cell
-makeCell c = if c `elem` ['0'..'9'] then digitToInt c:: Cell else 0::Cell
+makeCell c = if isDigit c then digitToInt c:: Cell else 0::Cell
 
 type Block = [Cell]
 
-blocks :: Sudoku -> [Block]
-blocks (Sudoku grid) = [[grid ! (i+x, j+y) | x <- [0..2], y <- [0..2]] | i <- [0,3,6], j <- [0,3,6]]
-
 blockAt :: Int -> Int -> Sudoku -> Block
-blockAt i j sudoku = blocks sudoku !! (bi*3 + bj)
+blockAt i j (Sudoku grid) =
+  [grid ! (bi*3 + x, 3*bj + y) | x <- [0..2], y <- [0..2]]
   where (bi, bj) = (i `div` 3, j `div` 3)
 
 row :: Int -> Sudoku -> Block
@@ -23,7 +22,7 @@ row i  (Sudoku grid) = [grid ! (i, j) | j <- [0..8]]
 col ::  Int -> Sudoku -> Block
 col j (Sudoku grid) = [grid ! (i, j) | i <- [0..8]]
 
-type Grid = Array (Int, Int) Cell
+type Grid = UArray (Int, Int) Cell
 
 makeGrid :: [String] -> Grid
 makeGrid xs = listArray ((0,0), (8,8)) (map makeCell =<< xs)
@@ -63,13 +62,13 @@ findPossible sudoku (i, j) =
   let xRow = row i sudoku
       yCol = col j sudoku
       zBlock = blockAt i j sudoku
-      emptyArray = array (0,9) [(k,0)|k<-[1..9]]
+      emptyArray = array (0,9) [(k,0)|k<-[0..9]] :: UArray Int Int
       cover = emptyArray // [(k,1)|k<-concat [xRow,yCol,zBlock]]
       possible =  [k|k<-[1..9], cover ! k == 0]  -- what's not in the cover
   in (i, j, possible)
 
 findEmpty :: Grid -> [(Int, Int)]
-findEmpty grid = [(i,j) | i <- [0..8], j <- [0..8], grid ! (i, j) == 0]
+findEmpty grid = [(i,j)|((i, j), g) <- assocs grid, g == 0]
 
 findEasiest :: [(Int, Int, [Cell])] -> (Int, Int, [Cell])
 findEasiest (a@(_, _,posa):b@(_, _, posb):as)
