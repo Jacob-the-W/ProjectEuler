@@ -10,10 +10,11 @@ daysInMonth y m
 --monday = 1
 dayOfWeek :: Int -> Int -> Int -> Int
 dayOfWeek 1900 1 0 = 0
-dayOfWeek y m d =
-  (dayOfWeek 1900 1 0 + sum [daysInMonth ys ms|ys<-[1900..y-1],ms<-[1..12]]
-                      + sum [daysInMonth y ms|ms<-[1..m-1]]
-                      + d) `mod` 7
+dayOfWeek y m d
+  | y < 1900 = dayOfWeek (y + 400) m d
+  | otherwise = (dayOfWeek 1900 1 0 + 
+    sum [daysInMonth ys ms|ys<-[1900..y-1],ms<-[1..12]]
+    + sum [daysInMonth y ms|ms<-[1..m-1]] + d) `mod` 7
 
 solution :: Int
 solution = length $ filter (==0)

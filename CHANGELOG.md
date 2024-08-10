@@ -1,6 +1,10 @@
 # Revision history for ProjectEuler
 
-## 1.1.0.6 2024-7-27
+## 1.1.0.7 2024-08-10
+* Added problems 68, 77, 78, 79, 80, 81.
+* Small changes to 9, 19, 23, 39.
+
+## 1.1.0.6 2024-07-27
 * Added problems 72, 73, 74, 76.
 
 ## 1.1.0.5 - 2024-05-05
@@ -14,7 +18,7 @@
 * Problem 60 has been changed to a recursive algorithm instead of a manual psuedo-recursion.
 * Added problems 62, 63, 65, 66, 67, 69, 70, 71
 
-## 1.1.0.3 - 2024-4-13
+## 1.1.0.3 - 2024-04-13
 
 * Problem 60 added
 

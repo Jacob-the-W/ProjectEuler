@@ -278,7 +278,7 @@ primeFactors n | 1 == signum n = factors n primes
 -- [(2,3),(3,5),(5,7)]
 -- @
 primePowers:: (Special a, Integral a) => a -> [(a,Int)]
-primePowers n = groupLengths <$> (group . primeFactors $ n) where
+primePowers = (groupLengths <$>) . group . primeFactors where
   groupLengths [] = undefined
   -- group [] == []; group [2] = [[2]]. 
   -- Mapping over an empty list does nothing, so we can safely assume the list is non-empty,
@@ -296,7 +296,7 @@ primePowers n = groupLengths <$> (group . primeFactors $ n) where
 -- [[1,2,4,8],[1,3,9,27,81,243],[1,5,25,125,625,3125,15625,78125]]
 -- @
 primePowersListed :: (Special b, Integral b) => b -> [[b]]
-primePowersListed n = divisors' <$> primePowers n where
+primePowersListed = (divisors' <$>) . primePowers where
    divisors' (a, b) = [(a^)] <*> [0..b]
 {-# SPECIALISE primePowersListed :: Integer -> [[Integer]] #-}
 {-# SPECIALISE primePowersListed :: Int -> [[Int]] #-}

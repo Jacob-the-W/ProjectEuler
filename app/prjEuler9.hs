@@ -1,12 +1,16 @@
 module PrjEuler9 where
 
-isPythagorean :: (Num a, Eq a) => a -> a -> a -> Bool
-isPythagorean a b c = a^2 + b^2 == c^2
-
 solutionsForPerimeter :: Integral a => a -> [[a]]
-solutionsForPerimeter p = 
-    [[a,b,c]|a<-[3..(p `div` 3)],b<-[a..(p-a-1) `div` 2],
-      let c = p-a-b, isPythagorean a b c]
-                            
+solutionsForPerimeter p = [[a,b,c] |
+  u <- [1..floor $ (sqrt(1+2*fromIntegral p) - 1) / 2],
+  v <- [1..u-1],
+  gcd u v == 1, even u == odd v,
+  k <- [1..p `div` (2*u*(u+v))],
+  2*k*u*(u+v) == p,
+  let (leg1, leg2) = (u^2 - v^2, 2*u*v)
+      a = k*min leg1 leg2
+      b = k*max leg1 leg2
+      c = k*(u^2 + v^2)]
+
 main :: IO()
-main = do print $ product $ head $ solutionsForPerimeter 1000                           
+main = do print $ product $ head $ solutionsForPerimeter 1000

@@ -74,6 +74,7 @@ import PrjEuler63 (main)
 import PrjEuler65 (main)
 import PrjEuler66 (main)
 import PrjEuler67 (main)
+import PrjEuler68 (main)
 import PrjEuler69 (main)
 import PrjEuler70 (main)
 import PrjEuler71 (main)
@@ -82,6 +83,11 @@ import PrjEuler73 (main)
 import PrjEuler74 (main)
 import PrjEuler75 (main)
 import PrjEuler76 (main)
+import PrjEuler77 (main)
+import PrjEuler78 (main)
+import PrjEuler79 (main)
+import PrjEuler80 (main)
+import PrjEuler81 (main)
 import PrjEuler95 (main)
 import PrjEuler96 (main)
 import PrjEuler100 (main)
@@ -115,10 +121,12 @@ solutions = Map.fromDistinctAscList
   (55, PrjEuler55.main),(56, PrjEuler56.main),(57, PrjEuler57.main),
   (58, PrjEuler58.main),(59, PrjEuler59.main),(60, PrjEuler60.main),
   (62, PrjEuler62.main),(63, PrjEuler63.main),(65, PrjEuler65.main),
-  (66, PrjEuler66.main),(67, PrjEuler67.main),(69, PrjEuler69.main),
-  (70, PrjEuler70.main),(71, PrjEuler71.main),(72, PrjEuler72.main),
-  (73, PrjEuler73.main),(74, PrjEuler74.main), (75, PrjEuler75.main),
-  (76, PrjEuler76.main),(95, PrjEuler95.main),(96, PrjEuler96.main),
+  (66, PrjEuler66.main),(67, PrjEuler67.main),(68, PrjEuler68.main),
+  (69, PrjEuler69.main),(70, PrjEuler70.main),(71, PrjEuler71.main),
+  (72, PrjEuler72.main),(73, PrjEuler73.main),(74, PrjEuler74.main),
+  (75, PrjEuler75.main),(76, PrjEuler76.main),(77, PrjEuler77.main),
+  (78, PrjEuler78.main),(79, PrjEuler79.main),(80, PrjEuler80.main),
+  (81, PrjEuler81.main),(95, PrjEuler95.main),(96, PrjEuler96.main),
   (100,PrjEuler100.main)]
 
 runAll :: IO ()
