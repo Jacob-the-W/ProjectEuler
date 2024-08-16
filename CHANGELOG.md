@@ -1,4 +1,6 @@
 # Revision history for ProjectEuler
+## 1.1.0.8 2024-08-16
+* Adding 94.
 
 ## 1.1.0.7 2024-08-10
 * Added problems 68, 77, 78, 79, 80, 81.

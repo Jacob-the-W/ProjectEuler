@@ -1,11 +1,11 @@
 {-# LANGUAGE BangPatterns #-}
-module Main where
+module Main (Main.main) where
 
-import Control.Monad
+import Control.Monad ( when, unless )
 import qualified Data.Map as Map
 import Data.Map (Map)
-import Data.Maybe
-import Data.Ratio
+import Data.Maybe ( mapMaybe )
+import Data.Ratio ( (%) )
 import Data.Time.Clock.System ( getSystemTime, systemSeconds, systemNanoseconds, SystemTime (systemNanoseconds) )
 
 import Primes (prettyPrint)
@@ -88,10 +88,11 @@ import PrjEuler78 (main)
 import PrjEuler79 (main)
 import PrjEuler80 (main)
 import PrjEuler81 (main)
+import PrjEuler94 (main)
 import PrjEuler95 (main)
 import PrjEuler96 (main)
 import PrjEuler100 (main)
-import Data.List
+import Data.List ( group, intercalate, partition, sort )
 import Text.Read (readMaybe)
 
 isIndex :: Int -> Bool
@@ -126,8 +127,8 @@ solutions = Map.fromDistinctAscList
   (72, PrjEuler72.main),(73, PrjEuler73.main),(74, PrjEuler74.main),
   (75, PrjEuler75.main),(76, PrjEuler76.main),(77, PrjEuler77.main),
   (78, PrjEuler78.main),(79, PrjEuler79.main),(80, PrjEuler80.main),
-  (81, PrjEuler81.main),(95, PrjEuler95.main),(96, PrjEuler96.main),
-  (100,PrjEuler100.main)]
+  (81, PrjEuler81.main),(94, PrjEuler94.main),(95, PrjEuler95.main),
+  (96, PrjEuler96.main),(100,PrjEuler100.main)]
 
 runAll :: IO ()
 runAll = do problemsPrint . Map.toList $ Map.drop 1 solutions; do putStr "\nTotal"
@@ -145,10 +146,10 @@ problemsPrint =
           !diff = fromIntegral s2 - fromIntegral s1 +
             fromIntegral ns2%1000000000 -
             fromIntegral ns1%1000000000 :: Rational
-          !diffS = prettyPrint diff 9
-          !diff_ms = prettyPrint (1000*diff) 6
-          !diff_us = prettyPrint (1000000*diff) 3
-          !diff_ns = show . round $ (1000000000*diff)
+          !diffS = prettyPrint diff 10
+          !diff_ms = prettyPrint (1000*diff) 7
+          !diff_us = prettyPrint (1000000*diff) 4
+          !diff_ns = prettyPrint (1000000000*diff) 1
       putStrLn ("\nTime: " ++ diffS ++ " seconds.")
       putStrLn ("      " ++ diff_ms ++ " milliseconds.")
       putStrLn ("      " ++ diff_us ++ " microseconds.")
@@ -209,7 +210,7 @@ main = do
 
   input <- getLine
 
-  let (indices, badIndices) = partition isIndex . map head . group . sort . 
+  let (indices, badIndices) = partition isIndex . map head . group . sort .
         mapMaybe (\x -> readMaybe x :: Maybe Int) $ words input
       (nI, nBI) = (null indices, null badIndices)
 
