@@ -1,4 +1,7 @@
 module PrjEuler100 where
+
+import Data.Ratio
+
 {-
 Playing loose with limits,
 
@@ -8,22 +11,24 @@ a/(a+b) * (a-1)/(a+b-1) -> 1/2
 
 so a/b -> 1/(sqrt 2 - 1) = sqrt 2 + 1 
 
-In particular a -> b*(sqrt 2 + 1) > b, so we'll iterate on b.
+Find the convergent of 1 + sqrt 2  and scale up til it works
 
-Why ceiling seems to work all around, and round/floor do not for 'a' is unclear to me. 
 
-For a lower bound on b, note
-a + b ~= b*(sqrt 2 + 1) + b 
-       = b*(sqrt 2 + 2) > n whenever
-                            b > n / (sqrt 2 + 2)
-
-Starting b at ceiling (n / (sqrt 2 + 2)) makes sense here for sure.
+solving ak/(ak + bk) * (ak - 1)/(ak + bk - 1) = 1/2 for k
+ k = (a - b)/(a^2 - 2*a*b - b^2)
 -}
 
-solution :: (Int, Int)
-solution = head [(a,b)|b<-[ceiling (10^12/(sqrt 2 + 2))..], 
-                       let a =  ceiling $ fromIntegral b*(sqrt 2 + 1),
-                       2*a*(a-1) == (a+b)*(a+b-1)]
+convergent :: Fractional a => [a] -> Int -> a
+convergent xs n = foldr1 (\x y -> x + 1/y) (take n xs)
+
+solution :: (Integer, Integer)
+solution =  head . filter ((>10^12) . uncurry (+)) . map scale $ 
+  convergent (toRational <$> repeat 2) <$> [1..] 
+    where
+      scale r = 
+        let (a, b) = (numerator r, denominator r)
+            k = (a - b) `div` (a^2 - 2*a*b - b^2)
+        in (a*k, b*k)
 
 main :: IO ()
 main = do 
