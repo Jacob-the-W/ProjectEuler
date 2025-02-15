@@ -1,4 +1,4 @@
-module PrjEuler21 where
+module PrjEuler21 (main) where
 
 import Primes (amicablePairs)
 

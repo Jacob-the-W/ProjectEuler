@@ -1,4 +1,4 @@
-module PrjEuler8 where
+module PrjEuler8 (main) where
 
 import Data.Char
 
@@ -11,5 +11,5 @@ list = digitToInt <$> show num
 solution :: Int
 solution = maximum [product . take 13 $ drop k list | k <- [0..length list - 13]]
 -- take the product of 13 adjacent digits , slide that down the list, comparing each product, then print the maximum of that list
-main::IO()
-main = do print solution
+main :: IO ()
+main = print solution

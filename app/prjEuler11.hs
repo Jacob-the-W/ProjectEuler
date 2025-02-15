@@ -1,4 +1,4 @@
-module PrjEuler11 where
+module PrjEuler11 (main) where
 
 array :: [[Int]]
 array=
@@ -38,6 +38,5 @@ forwardSlashMax = maximum [product [array!!((i+k) `mod` 20)!!((j-k) `mod` 20)|k<
 solution :: Int
 solution = maximum [upDownMax,leftRightMax,backSlashMax,forwardSlashMax]
 
-main :: IO()
-main = do 
-  print solution
+main :: IO ()
+main = print solution

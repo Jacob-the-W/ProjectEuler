@@ -1,4 +1,4 @@
-module PrjEuler13 where
+module PrjEuler13 (main) where
 
 main :: IO()
 main = do

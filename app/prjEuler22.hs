@@ -1,4 +1,4 @@
-module PrjEuler22 where
+module PrjEuler22 (main) where
 {--
 Using names.txt (right click and 'Save Link/Target As...'), a 46K text file containing over five-thousand first names, begin by sorting it into alphabetical order. Then working out the alphabetical value for each name, multiply this value by its alphabetical position in the list to obtain a name score.
 
@@ -21,7 +21,7 @@ nameValue name = sum (map (\x -> ord x - 64) name)
 score::(Int,String)->Int
 score (i,name) = i*nameValue name
 
-main::IO()
+main :: IO ()
 main = do
    input <- readFile "data\\p022_names.txt"
    let listOfStrings = sort $ read ("[" ++ input ++ "]")::[String]

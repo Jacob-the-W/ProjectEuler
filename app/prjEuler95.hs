@@ -1,4 +1,4 @@
-module PrjEuler95 where
+module PrjEuler95 (main) where
 
 import Primes (sumPropDivisors)
 

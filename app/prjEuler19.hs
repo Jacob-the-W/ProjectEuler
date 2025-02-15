@@ -1,4 +1,4 @@
-module PrjEuler19 where
+module PrjEuler19 (main) where
 --1 Jan 1900 was a Monday.
 
 daysInMonth :: Int -> Int -> Int
@@ -20,9 +20,8 @@ solution :: Int
 solution = length $ filter (==0)
   [dayOfWeek years months 1|years<-[1901..2000],months<-[1..12]]
 
-main::IO()
-main = do
-  print solution
+main :: IO ()
+main = print solution
 
 {--
 extra cheaty solution?

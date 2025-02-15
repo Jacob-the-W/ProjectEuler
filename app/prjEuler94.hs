@@ -1,28 +1,24 @@
 module PrjEuler94 (main) where
 
-import Data.List ( foldl' )
-
--- Call the same sides a, the different side b
--- Heron's formula gives us 
--- A = sqrt (s(s-a)(s-a)(s-b))
---   = (s-a) sqrt (s(s-b))
--- which is an integer iff s(s-b) is a perfect square
--- s(s-b) = (2a+b)/2*(2a-b)/2 is an integer and a perfect square
--- 4a^2 - b^2 must be multiple of 4 and perfect square
--- b^2 must be multiple of 4, so b must be even, a must be odd.
-presolution::[Int]
-presolution =
-  [2*a+b|
-    a<-[5,7..(10^9-1) `div` 3],
-    b<-[a-1,a+1],
-    let check = 4*a^2-b^2
-        r = floor . sqrt . fromIntegral $ check,
-    r^2 == check ]
+-- Instead of Heron's formula, generate pythagorean tuples [a,b,c]
+-- such that c / a ~= 2, and consider the triangle with side lengths
+-- [c, c, 2*a] which are almost equilateral.
+-- perimeter at most c + c + 2a = c + c + (c + 1) <= 10^9
+-- m^2 + n^2 = c <= (10^9-1) / 3
+presolution :: [Int]
+presolution = 
+  [2*(a+c)|
+    m <- [1..floor $ sqrt(2*10^9-5)/(2*sqrt 3) - 1/2] -- m^2 + (m+1)^2 <= (10^9 - 1) / 3
+    , n <-[1..min (m-1) (floor . sqrt . fromIntegral $ (10^9 - 1) `div` 3 - m^2)]
+    , let c = m^2 + n^2
+    , c `mod` 4 == 1 -- even m == odd n
+    , let a = min (m^2-n^2) (2*m*n)
+    , m^2 + n^2  <= (10^9 - 1) `div` 3
+    , abs (2*a - c ) == 1
+    , gcd m n == 1]
 
 solution :: Int
-solution = foldl' (+) 0 presolution
+solution = sum presolution
 
-main :: IO()
-main = do
-  print presolution
-  print solution
+main :: IO ()
+main = print solution

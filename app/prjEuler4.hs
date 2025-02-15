@@ -1,7 +1,7 @@
-module PrjEuler4 where
+module PrjEuler4 (main) where
 
 products :: [Int]
-products = let xs = [100..999] in [x*y|x<-xs,y<-xs]
+products = [x*y|x<-[100..999], y<-[x..999]]
 
 isPalindrome :: Int -> Bool
 isPalindrome n = 
@@ -11,6 +11,5 @@ isPalindrome n =
 solution :: Int
 solution = maximum . filter isPalindrome $ products
 
-main :: IO()
-main = do
-  print solution
+main :: IO ()
+main = print solution

@@ -1,7 +1,7 @@
-module PrjEuler23 where
+module PrjEuler23 (main) where
 
 import Primes (abundantsTo)
-import Data.Array.Unboxed
+import Data.Array.Unboxed ( (//), assocs, listArray, UArray ) 
 
 solution :: Int
 solution = 

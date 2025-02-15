@@ -1,4 +1,4 @@
-module PrjEuler15 where
+module PrjEuler15 (main) where
 
 choose :: Integral a => a -> a -> a
 choose n k = 
@@ -10,4 +10,4 @@ solution :: Integer
 solution = 40 `choose` 20 
 
 main :: IO ()
-main = do print solution
+main = print solution

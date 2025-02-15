@@ -14,6 +14,5 @@ collatz n
 solution :: Int
 solution = snd . maximum $ (\n -> (length . collatz $ n, n)) <$> [1,3..10^6]
 
-main :: IO()
-main = do
-  print solution
+main :: IO ()
+main = print solution

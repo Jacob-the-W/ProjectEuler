@@ -9,7 +9,7 @@ module Primes
   ( -- *Numbers
 
     -- ** Primes 
-    Special(primes), primesToUA, sieveUA,
+    Special(..), primesToUA, sieveUA,
 
     -- ** Other Numbers
     abundantsTo, amicablePairs, composites, compositesTo, highlyComposites, largelyComposites,
@@ -64,7 +64,7 @@ import qualified Data.IntMap as Map
 sieveUA :: Int -> UArray Int Bool
 sieveUA top = runSTUArray $ do
     let m = (top-1) `div` 2
-        r = floor . sqrt $ fromIntegral top + 1
+        r = floor . sqrt $ (fromIntegral top + 1 :: Double)
     sieve <- newArray (1,m) True      -- :: ST s (STUArray s Int Bool)
     forM_ [1..r `div` 2] $ \i -> do
       isPrime_ <- readArray sieve i
@@ -167,8 +167,8 @@ gcdext a b =
 -- 78498
 -- (0.05 secs, 27,135,696 bytes)
 -- @
-class Special a where
-   primes :: [a]
+class Integral a => Special a where
+  primes :: [a]
 
 instance Special Int where
    primes = 2 : filter isPrime wheel where
@@ -185,9 +185,9 @@ instance Special Integer where
 -- | 
 -- Trial division for primality testing. If input is an Int, uses a better wheel sieve to make primes for trial division.
 -- Otherwise, uses the wheel of just odds and Integer primes.
-isPrime :: (Special a, Integral a) => a -> Bool
+isPrime :: Special a => a -> Bool
 isPrime n =
-    let r = floor . sqrt . fromIntegral $ n
+    let r = floor . sqrt $ (fromIntegral n :: Double)
     in (n >= 2) && all (\p -> n `rem` p /= 0) (takeWhile (<= r) primes)
 
 {-# SPECIALISE isPrime :: Integer -> Bool #-}
@@ -209,7 +209,7 @@ isPrime n =
 -- [4,6,8,9,10,12,14,15,16,18,20,21,22,24,25,26,27,28,30,32]
 -- (0.00 secs, 99,832 bytes)
 -- @
-composites :: (Special a, Integral a) => [a]
+composites :: Special a => [a]
 composites = setMinus [2..] primes
 {-# SPECIALISE composites :: [Integer] #-}
 {-# SPECIALISE composites :: [Int] #-}
@@ -277,7 +277,7 @@ primeFactors n | 1 == signum n = factors n primes
 -- >primePowers (2^3*3^5*5^7)
 -- [(2,3),(3,5),(5,7)]
 -- @
-primePowers:: (Special a, Integral a) => a -> [(a,Int)]
+primePowers:: Special a => a -> [(a,Int)]
 primePowers = (groupLengths <$>) . group . primeFactors where
   groupLengths [] = undefined
   -- group [] == []; group [2] = [[2]]. 
@@ -295,7 +295,7 @@ primePowers = (groupLengths <$>) . group . primeFactors where
 -- >primePowersListed (2^3*3^5*5^7)
 -- [[1,2,4,8],[1,3,9,27,81,243],[1,5,25,125,625,3125,15625,78125]]
 -- @
-primePowersListed :: (Special b, Integral b) => b -> [[b]]
+primePowersListed :: Special a => a -> [[a]]
 primePowersListed = (divisors' <$>) . primePowers where
    divisors' (a, b) = [(a^)] <*> [0..b]
 {-# SPECIALISE primePowersListed :: Integer -> [[Integer]] #-}
@@ -334,7 +334,7 @@ primePowersListed = (divisors' <$>) . primePowers where
 -- [(2,9995),(3,4996),(5,2499),(7,1665),(11,998),(13,832),(17,624),(19,554),(23,452),(29,355)]
 -- (0.00 secs, 139,048 bytes)
 -- @
-multiplyPrimeFactors :: (Special a, Integral a) => [a] -> [(a, Int)]
+multiplyPrimeFactors :: Special a => [a] -> [(a, Int)]
 multiplyPrimeFactors xs = groupLengths <$> (group . mergeAll $ primeFactors <$> xs) where
   groupLengths [] = undefined
   groupLengths (g:gs) = (g,1+length gs)
@@ -346,7 +346,7 @@ multiplyPrimeFactors xs = groupLengths <$> (group . mergeAll $ primeFactors <$> 
 -- > distinctPrimesCount $ (2*3*5)^4
 -- 3
 -- @
-distinctPrimesCount :: (Special a, Integral a) => a -> Int
+distinctPrimesCount :: Special a => a -> Int
 distinctPrimesCount = length . primePowers
 {-# SPECIALISE distinctPrimesCount :: Integer -> Int #-}
 {-# SPECIALISE distinctPrimesCount :: Int -> Int #-}
@@ -360,14 +360,14 @@ distinctPrimesCount = length . primePowers
 --   in r^2==n
 -- @
 -- , which will fail for large inputs due to floating point error.
-isSquare :: (Special a, Integral a) => a -> Bool
+isSquare :: Special a => a -> Bool
 isSquare n =
  (n >= 0) && all (even . snd) (primePowers n)
 {-# SPECIALISE isSquare :: Integer -> Bool #-}
 {-# SPECIALISE isSquare :: Int -> Bool #-}
 
 -- | See 'isSquare'.
-isCube :: (Special a, Integral a) => a -> Bool
+isCube :: Special a => a -> Bool
 isCube n =
  (n >= 0) && all (((==0) . (`mod` 3)) . snd) (primePowers n)
 {-# SPECIALISE isCube :: Integer -> Bool #-}
@@ -379,7 +379,7 @@ isCube n =
 -- > filter isPower [1..100]
 -- [1,4,8,9,16,25,27,32,36,49,64,81,100]
 -- @ 
-isPower :: (Special a, Integral a) => a -> Bool
+isPower :: Special a => a -> Bool
 isPower x = let pf = primePowers x in case primePowers x of
   [] -> True -- 0,1
   (_:ps) ->
@@ -431,7 +431,7 @@ outer f xs ys = [[f x y | y<-ys]|x<-xs]
 -- > divisors (2^2*3^2*5)
 -- [1,2,3,4,5,6,9,10,12,15,18,20,30,36,45,60,90,180]
 -- @
-divisors :: (Special a, Integral a) => a -> [a]
+divisors :: Special a => a -> [a]
 divisors 1 = [1]
 divisors n = foldr1 (\x y -> mergeAll $ outer (*) x y) (primePowersListed n)
 {-# SPECIALISE divisors :: Integer -> [Integer] #-}
@@ -469,19 +469,19 @@ merge (x:xs) (y:ys)
   | otherwise =  y:merge (x:xs) ys
 
 -- | Divisors, not including the input. 
-propDivisors :: (Special a, Integral a) => a -> [a]
+propDivisors :: Special a => a -> [a]
 propDivisors n = if n<=1 then [] else init . divisors $ n
 {-# SPECIALISE propDivisors :: Integer -> [Integer] #-}
 {-# SPECIALISE propDivisors :: Int -> [Int] #-}
 
 -- | Uses the prime factorization directly to calculate the sum of divisors. 
-sumDivisors :: (Special a, Integral a) => a -> a
+sumDivisors :: Special a => a -> a
 sumDivisors n = if n == 0 then 0 else product $  map (\(a,b)-> (a^(b+1)-1) `div` (a-1)) $ primePowers n
 {-# SPECIALISE sumDivisors :: Integer -> Integer #-}
 {-# SPECIALISE sumDivisors :: Int -> Int #-}
 
 -- | See 'sumDivisors', 'propDivisors' vs 'divisors'
-sumPropDivisors :: (Special a, Integral a) => a -> a
+sumPropDivisors :: Special a => a -> a
 sumPropDivisors n = sumDivisors n - n
 {-# SPECIALISE sumPropDivisors :: Integer -> Integer #-}
 {-# SPECIALISE sumPropDivisors :: Int -> Int #-}
@@ -495,7 +495,7 @@ sumPropDivisors n = sumDivisors n - n
 -- > filter isAmicable [1..10000]
 -- [220,284,1184,1210,2620,2924,5020,5564,6232,6368]
 -- @
-isAmicable :: (Special a, Integral a) => a -> Bool
+isAmicable :: Special a => a -> Bool
 isAmicable  n =
   let m = sumPropDivisors n
   in (m /= n) &&  (sumPropDivisors m == n)
@@ -513,15 +513,15 @@ isAmicable  n =
 -- > take 10 . filter isDeficient $ [2..]
 -- [2,3,4,5,7,8,9,10,11,13]
 -- @
-isPerfect :: (Special a, Integral a) => a -> Bool
+isPerfect :: Special a => a -> Bool
 isPerfect   n = sumPropDivisors n == n
 
 -- | See 'isPerfect' for definition, 'abundantsTo' for a bettery way.
-isAbundant :: (Special a, Integral a) => a -> Bool
+isAbundant :: Special a => a -> Bool
 isAbundant  n = sumPropDivisors n >  n
 
 -- | See 'isPerfect' 
-isDeficient :: (Special a, Integral a) => a -> Bool
+isDeficient :: Special a => a -> Bool
 isDeficient n = sumPropDivisors n <  n
 
 {-# SPECIALISE isPerfect :: Integer -> Bool #-}
@@ -610,13 +610,13 @@ abundantsTo n = Map.keys $ go Map.empty start where
 -- @
 -- 
 -- Clearly, 4*6*8=192.
-numOfDivisors :: (Special a, Integral a) => a -> a
+numOfDivisors :: Special a => a -> a
 numOfDivisors = product . (fromIntegral . (+1) . snd <$>) . primePowers
 {-# SPECIALISE numOfDivisors :: Integer -> Integer #-}
 {-# SPECIALISE numOfDivisors :: Int -> Int #-}
 
 -- |  See 'numOfDivisors' - 1.
-numOfPropDivisors :: (Special a, Integral a) => a -> a
+numOfPropDivisors :: Special a => a -> a
 numOfPropDivisors n = numOfDivisors n - 1
 {-# SPECIALISE numOfPropDivisors :: Integer -> Integer #-}
 {-# SPECIALISE numOfPropDivisors :: Int -> Int #-}
@@ -628,7 +628,7 @@ numOfPropDivisors n = numOfDivisors n - 1
 -- >take 25 $ highlyComposites
 -- [1,2,4,6,12,24,36,48,60,120,180,240,360,720,840,1260,1680,2520,5040,7560,10080,15120,20160,25200,27720]
 -- @
-highlyComposites :: (Special a, Integral a) => [a]
+highlyComposites :: Special a => [a]
 highlyComposites =
   let f [] = []; f (x@(a,_):xs) = x:dropWhile ((<=a) . fst) (f xs)
   in  map snd . f $ map (\n->(numOfDivisors n, n)) (1:[2,4..])
@@ -639,7 +639,7 @@ highlyComposites =
 -- | 
 -- Related to the 'highlyComposites', but they have at least as many divisors as every number below them. 
 -- The highly composites are a subset of this by definition.
-largelyComposites :: (Special a, Integral a) => [a]
+largelyComposites :: Special a => [a]
 largelyComposites =
   let f [] = []; f (x@(a,_):xs) = x:dropWhile ((<a) . fst) (f xs)
   in  map snd . f $ map (\n->(numOfDivisors n, n)) (1:2:3:[4,6..])
@@ -662,7 +662,7 @@ largelyComposites =
 -- But we will not use the list to calculate totient, we use the prime factors instead.
 -- 
 -- We use the modified form of p^n*(1-1/p) = p^(n-1)*(p-1) and only work on the prime powers themselves.
-totient :: (Special b, Integral b) => b -> b
+totient :: Special a => a -> a
 totient n = foldr ((*) . (\(p,m)-> p^(m-1)*(p-1))) 1 (primePowers n)
 {-# SPECIALISE totient :: Int -> Int #-}
 {-# SPECIALISE totient :: Integer -> Integer #-}
@@ -677,16 +677,16 @@ totient n = foldr ((*) . (\(p,m)-> p^(m-1)*(p-1))) 1 (primePowers n)
 -- @
 -- 
 -- Note @map (^2) [1,5,7,11] == [1,25,49,121]@
-charmichael :: (Special b, Integral b) => b -> b
+charmichael :: Special a => a -> a
 charmichael n = foldr (lcm . f) 1 (primePowers n) where
     f (p,r)
-      | p == 2 && r > 3 = (p^(fromIntegral r-1)*(p-1)) `div` 2
-      | otherwise =  p^(fromIntegral r-1)*(p-1)
+      | p == 2 && r > 3 = (p^(r-1 )*(p-1)) `div` 2
+      | otherwise =  p^(r-1)*(p-1)
 {-# SPECIALISE charmichael :: Integer -> Integer #-}
 {-# SPECIALISE charmichael :: Int -> Int #-}
 
 -- | The summative totient, summing 1, plus the totient of 1 up to the totient of the input. If you need multiple values, consider the list form 'sumTotients'. See 'farey'.
-sumTotient :: (Special b, Integral b) => b -> b
+sumTotient :: Special a => a -> a
 sumTotient n = foldr ((+) . totient) 1 [1..n]
 {-# SPECIALISE sumTotient :: Integer -> Integer #-}
 {-# SPECIALISE sumTotient :: Int -> Int #-}
@@ -802,7 +802,7 @@ fractionDigits a b =
 prettyPrint :: (Integral a, Show a) => Ratio a -> Int -> [Char]
 prettyPrint ratio numDigits=
   if ratio < 0 then '-':prettyPrint (-ratio) numDigits
-  else concat . addDecimal . map show . take numDigits $ fractionDigits a b where
+  else concat . addDecimal . map show . take (numDigits + 1) $ fractionDigits a b where
     (a, b) = (numerator ratio, denominator ratio)
     addDecimal [] = ["did you mean to take 0 digits?"]
     addDecimal [x] = [x]

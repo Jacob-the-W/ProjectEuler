@@ -1,13 +1,12 @@
-module PrjEuler12 where
+module PrjEuler12 (main) where
 
 import Primes (numOfDivisors)
 
 triangular :: [Int]
-triangular = map (\n->n*(n+1) `div` 2) [1..]
+triangular = scanl (+) 0 [1..]
 
 solution :: Int
 solution = head $ filter ((>500) . numOfDivisors) triangular
 
 main :: IO ()
-main = do 
-  print solution
+main = print solution

@@ -1,13 +1,10 @@
-module PrjEuler25 where
+module PrjEuler25 (main) where
 
 fibs :: [Integer]
 fibs = 0:1:zipWith (+) fibs (tail fibs)
 
-indexedFibs :: [(Integer, Integer)]
-indexedFibs = zip [0..] fibs
-
 solution :: Integer
-solution = fst $ head $ dropWhile (\(_,f) -> f < 10^999) indexedFibs -- 10^n has n+1 digits
+solution = fst . head . dropWhile ((<10^999) . snd) . zip [0..] $ fibs -- 10^n has n+1 digits
 
 main :: IO ()
-main = do print solution
+main = print solution

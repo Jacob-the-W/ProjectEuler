@@ -1,10 +1,9 @@
-module PrjEuler10 where
+module PrjEuler10 (main) where
 
 import Primes (primesToUA)
-import Data.List (foldl')
 
 solution :: Int
-solution = foldl' (+) 0 $ primesToUA 2000000
+solution = sum $ primesToUA 2000000
 
 main :: IO ()
-main = do print solution
+main = print solution
