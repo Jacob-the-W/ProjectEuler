@@ -380,7 +380,7 @@ isCube n =
 -- [1,4,8,9,16,25,27,32,36,49,64,81,100]
 -- @ 
 isPower :: Special a => a -> Bool
-isPower x = let pf = primePowers x in case primePowers x of
+isPower x = let pf = primePowers x in case pf of
   [] -> True -- 0,1
   (_:ps) ->
     let powers = map snd pf
