@@ -16,5 +16,5 @@ solution2 n = (n-1)*n*(n+1)*(3*n+2) `div` 12
 
 main :: IO ()
 main = do
-    mapM_ (\n->do print (n, solution1 n)) ((10^) <$> [0..6])
-    mapM_ (\n->do print (round $ logBase 10 (fromIntegral n), solution2 n)) ((10^) <$> [0..6])
+    mapM_ print ((\n -> (n, solution1 n)). (10^) <$> [0..6])
+    mapM_ print ((\n -> (n, solution2 (10^n))) <$> [0..6])
