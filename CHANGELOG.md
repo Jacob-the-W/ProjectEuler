@@ -1,4 +1,13 @@
 # Revision history for ProjectEuler
+## 1.1.0.9 2025-02-15
+* Updated 94, 20-40x speed up by generating Pythagorean tuples as a start instead of testing for perfect squares.
+* Cleaning the formatting of several of the earlier problems
+* Cleaned up 17 significantly
+* In 'Primes' library, made `Special` a typeclass with a constraint of `Integral`.
+
+   In other words,
+  functions which used to require `(Special a, Integral a) =>` only need `Special a =>`.
+
 ## 1.1.0.8 2024-08-16
 * Adding 94.
 * Changed algorithm for problem 100, moving from 40s to 0 nanoseconds.
